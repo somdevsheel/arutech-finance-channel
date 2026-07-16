@@ -11,13 +11,32 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-from arutech_api.infrastructure.database.seed_data import PERMISSIONS, ROLE_PERMISSIONS
-
 # revision identifiers, used by Alembic.
 revision: str = 'c422da52af08'
 down_revision: Union[str, Sequence[str], None] = '532e60562fde'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
+
+# Phase 2's original permission set, frozen here rather than imported from
+# `infrastructure.database.seed_data` — that module's lists keep growing in
+# later phases (see Phase 5's migration 0701461178f7), and a migration
+# importing the *live* module means `alembic upgrade head` on a fresh
+# database re-seeds whatever seed_data.py looks like *today*, not what
+# Phase 2 actually shipped — colliding with later migrations that add their
+# own permissions incrementally. A migration is a historical record; it
+# must not depend on code that changes after it's written.
+PERMISSIONS: list[tuple[str, str]] = [
+    ("users.read", "View user profiles"),
+    ("users.manage", "Create, update, and deactivate user accounts"),
+    ("audit_logs.read", "View the audit log"),
+    ("roles.manage", "Manage roles and their permissions"),
+]
+ROLE_PERMISSIONS: dict[str, list[str]] = {
+    "admin": [code for code, _ in PERMISSIONS],
+    "employee": ["users.read", "audit_logs.read"],
+    "partner": [],
+    "customer": [],
+}
 
 
 def upgrade() -> None:

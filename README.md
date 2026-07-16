@@ -4,11 +4,11 @@ Enterprise Loan DSA platform for banks and NBFCs: Loan Origination System
 (LOS), CRM, Lead Management (LMS), admin/employee/partner/customer portals,
 analytics, and an AI assistant layer, built as one modular monorepo.
 
-This repository is being built phase by phase. **Phases 1-4 — System
-Architecture & Foundation, Authentication/RBAC, the Public Website, and
-the Customer Portal** are complete. Later phases (LMS, CRM, LOS,
-admin/employee/partner portals, AI, BI, hardening, deployment) build on
-top of this.
+This repository is being built phase by phase. **Phases 1-5 — System
+Architecture & Foundation, Authentication/RBAC, the Public Website, the
+Customer Portal, and Lead Scoring & Pipeline** are complete. Later phases
+(LMS/CRM continued, LOS, admin/employee/partner portals, AI, BI,
+hardening, deployment) build on top of this.
 
 ## What's here
 
@@ -25,8 +25,9 @@ top of this.
   SQLAlchemy 2.0 + Alembic, Celery, structured logging, OpenTelemetry,
   Prometheus metrics. Includes full authentication (password + OTP login,
   refresh-token rotation, password reset), RBAC, audit logging, trusted-
-  proxy-aware rate limiting/IP attribution, and a public contact-form
-  endpoint.
+  proxy-aware rate limiting/IP attribution, a public contact-form
+  endpoint, and lead scoring/pipeline management (contact submissions
+  automatically become triaged, assignable leads).
 - `infra/` — NGINX reverse proxy config, Prometheus/Grafana/OTel-collector
   provisioning.
 - `docker-compose.yml` — the whole stack for local development.
@@ -35,8 +36,8 @@ top of this.
 
 See `apps/web/README.md` and `apps/api/README.md` for app-specific detail,
 and `docs/phase-1-architecture.md` / `docs/phase-2-architecture.md` /
-`docs/phase-3-architecture.md` / `docs/phase-4-architecture.md` for the
-design decisions behind each phase.
+`docs/phase-3-architecture.md` / `docs/phase-4-architecture.md` /
+`docs/phase-5-architecture.md` for the design decisions behind each phase.
 
 ## Prerequisites
 

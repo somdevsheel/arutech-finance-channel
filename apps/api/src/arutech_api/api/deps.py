@@ -13,6 +13,7 @@ from arutech_api.domain.audit.repository import AuditLogRepository
 from arutech_api.domain.auth.ports import OtpDeliveryPort
 from arutech_api.domain.auth.repository import OtpRepository, RefreshTokenRepository
 from arutech_api.domain.contact.repository import ContactSubmissionRepository
+from arutech_api.domain.leads.repository import LeadRepository
 from arutech_api.domain.rbac.repository import RbacRepository
 from arutech_api.domain.users.entities import UserEntity
 from arutech_api.domain.users.repository import UserRepository
@@ -21,6 +22,9 @@ from arutech_api.infrastructure.database.repositories.audit_log_repository impor
 )
 from arutech_api.infrastructure.database.repositories.contact_repository import (
     SqlAlchemyContactSubmissionRepository,
+)
+from arutech_api.infrastructure.database.repositories.lead_repository import (
+    SqlAlchemyLeadRepository,
 )
 from arutech_api.infrastructure.database.repositories.otp_repository import (
     SqlAlchemyOtpRepository,
@@ -38,6 +42,7 @@ from arutech_api.infrastructure.notifications.log_otp_delivery import LoggingOtp
 from arutech_api.services.audit_service import AuditService
 from arutech_api.services.auth_service import AuthService
 from arutech_api.services.contact_service import ContactService
+from arutech_api.services.lead_service import LeadService
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -66,10 +71,8 @@ def get_contact_repository(session: DbSession) -> ContactSubmissionRepository:
     return SqlAlchemyContactSubmissionRepository(session)
 
 
-def get_contact_service(
-    contact_repo: Annotated[ContactSubmissionRepository, Depends(get_contact_repository)],
-) -> ContactService:
-    return ContactService(contact_repo)
+def get_lead_repository(session: DbSession) -> LeadRepository:
+    return SqlAlchemyLeadRepository(session)
 
 
 _otp_delivery_channel = LoggingOtpDeliveryChannel()
@@ -83,6 +86,21 @@ def get_audit_service(
     audit_repo: Annotated[AuditLogRepository, Depends(get_audit_log_repository)],
 ) -> AuditService:
     return AuditService(audit_repo)
+
+
+def get_lead_service(
+    lead_repo: Annotated[LeadRepository, Depends(get_lead_repository)],
+    user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> LeadService:
+    return LeadService(lead_repo, user_repo, audit_service)
+
+
+def get_contact_service(
+    contact_repo: Annotated[ContactSubmissionRepository, Depends(get_contact_repository)],
+    lead_service: Annotated[LeadService, Depends(get_lead_service)],
+) -> ContactService:
+    return ContactService(contact_repo, lead_service)
 
 
 def get_auth_service(

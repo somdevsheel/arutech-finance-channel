@@ -5,14 +5,18 @@ database the same way — so tests exercise the exact roles/permissions the
 app actually ships with, not a parallel hand-maintained copy.
 """
 
-# A small, honest starter permission set tied to what actually exists after
-# Phase 2 (auth + RBAC + audit logs) — not speculative loan/CRM permissions
-# for features later phases haven't built yet.
+# A small, honest starter permission set tied to what actually exists —
+# not speculative permissions for features later phases haven't built yet.
+# `leads.*` (Phase 5) is the first genuinely CRM-shaped permission pair;
+# see migration 8f1c2a9b6d4e for how it was added without re-seeding the
+# permissions Phase 2 already inserted.
 PERMISSIONS: list[tuple[str, str]] = [
     ("users.read", "View user profiles"),
     ("users.manage", "Create, update, and deactivate user accounts"),
     ("audit_logs.read", "View the audit log"),
     ("roles.manage", "Manage roles and their permissions"),
+    ("leads.read", "View leads"),
+    ("leads.manage", "Update lead status and assignment"),
 ]
 
 # Role -> permission codes. Matches the existing `UserRole` enum
@@ -21,7 +25,7 @@ PERMISSIONS: list[tuple[str, str]] = [
 # permissions within that.
 ROLE_PERMISSIONS: dict[str, list[str]] = {
     "admin": [code for code, _ in PERMISSIONS],
-    "employee": ["users.read", "audit_logs.read"],
+    "employee": ["users.read", "audit_logs.read", "leads.read", "leads.manage"],
     "partner": [],
     "customer": [],
 }

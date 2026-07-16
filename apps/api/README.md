@@ -27,20 +27,27 @@ src/arutech_api/
     audit/           AuditLog entity + repository interface.
     users/           User entity + repository interface (Phase 1).
     contact/         ContactSubmission entity + repository interface (Phase 3).
+    leads/           Lead entity + LeadStatus pipeline (ALLOWED_TRANSITIONS
+                      state machine) + repository interface + scoring.py
+                      (a pure, deterministic score_lead() function) (Phase 5).
   infrastructure/    SQLAlchemy models + repository *implementations*, and
                       notifications/log_otp_delivery.py (the Phase 2
                       OtpDeliveryPort adapter — logs the code).
   services/          Use-case orchestration: auth_service.py (register,
                       login, OTP, refresh rotation, password reset,
-                      sessions), audit_service.py, and contact_service.py
+                      sessions), audit_service.py, contact_service.py
                       (public contact-form submissions, with honeypot
-                      spam filtering).
+                      spam filtering — now also creates a lead via
+                      lead_service.py on every real submission), and
+                      lead_service.py (pipeline status transitions,
+                      assignment, all audit-logged).
   main.py            App factory + ASGI app instance.
   worker.py          Celery app + task registry.
 alembic/             Migrations. env.py always reads the DB URL from
                       Settings, never from alembic.ini.
 tests/
-  unit/              No I/O — security/OTP hashing, worker task logic.
+  unit/              No I/O — security/OTP hashing, worker task logic,
+                      lead scoring/transition rules.
   integration/       Hits a real (if in-memory SQLite) DB via the
                       repository, and the HTTP app via httpx.
 scripts/
@@ -48,7 +55,8 @@ scripts/
 ```
 
 See `../../docs/phase-1-architecture.md`, `../../docs/phase-2-architecture.md`,
-and `../../docs/phase-3-architecture.md` for why it's laid out this way.
+`../../docs/phase-3-architecture.md`, `../../docs/phase-4-architecture.md`,
+and `../../docs/phase-5-architecture.md` for why it's laid out this way.
 
 ## Commands
 
@@ -108,4 +116,16 @@ deterministically.
 
 - `POST /api/v1/public/contact` — public, rate-limited (5/min), backs the
   website's Contact page. Silently no-ops (200, nothing stored) if the
-  hidden honeypot field is filled in.
+  hidden honeypot field is filled in. As of Phase 5, a real submission also
+  creates a lead.
+
+**Phase 5** — all under `/api/v1/leads`, requiring `leads.read`
+(GET routes) or `leads.manage` (POST routes)
+
+- `GET ""` — list leads, filterable by `status`/`assigned_to`, sorted by
+  score then recency.
+- `GET /{lead_id}`
+- `POST /{lead_id}/status` — moves a lead through the pipeline; rejects
+  illegal transitions (409) per `domain/leads/entities.ALLOWED_TRANSITIONS`.
+- `POST /{lead_id}/assign` — assigns to an employee/admin user; rejects
+  customers/partners as assignees (409) and unknown user IDs (404).

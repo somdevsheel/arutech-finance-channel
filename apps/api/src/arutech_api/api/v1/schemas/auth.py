@@ -4,7 +4,24 @@ from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from arutech_api.api.v1.schemas.common import MessageResponse
 from arutech_api.domain.users.entities import UserRole
+
+__all__ = [
+    "RegisterRequest",
+    "LoginRequest",
+    "OtpRequestRequest",
+    "OtpVerifyRequest",
+    "RefreshRequest",
+    "LogoutRequest",
+    "PasswordResetRequestRequest",
+    "PasswordResetConfirmRequest",
+    "UserResponse",
+    "TokenResponse",
+    "MessageResponse",
+    "SessionResponse",
+    "AuditLogResponse",
+]
 
 
 def _validate_password_strength(password: str) -> str:
@@ -81,10 +98,6 @@ class TokenResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     user: UserResponse
-
-
-class MessageResponse(BaseModel):
-    message: str
 
 
 class SessionResponse(BaseModel):

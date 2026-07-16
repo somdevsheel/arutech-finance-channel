@@ -152,6 +152,13 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        # NEXT_PUBLIC_* vars are inlined at build time, so this must be a
+        # build arg, not a runtime `environment:` entry (which would have
+        # no effect on the already-built bundle). NGINX on :80 is the
+        # actual public entry point in this topology, unlike .env's :3000
+        # default (meant for `pnpm dev` without the proxy in front).
+        NEXT_PUBLIC_SITE_URL: http://localhost
     restart: unless-stopped
     env_file:
       - ./apps/web/.env

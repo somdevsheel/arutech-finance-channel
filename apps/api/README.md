@@ -26,12 +26,15 @@ src/arutech_api/
     rbac/            Role/Permission entities + repository interface.
     audit/           AuditLog entity + repository interface.
     users/           User entity + repository interface (Phase 1).
+    contact/         ContactSubmission entity + repository interface (Phase 3).
   infrastructure/    SQLAlchemy models + repository *implementations*, and
                       notifications/log_otp_delivery.py (the Phase 2
                       OtpDeliveryPort adapter — logs the code).
   services/          Use-case orchestration: auth_service.py (register,
                       login, OTP, refresh rotation, password reset,
-                      sessions) and audit_service.py.
+                      sessions), audit_service.py, and contact_service.py
+                      (public contact-form submissions, with honeypot
+                      spam filtering).
   main.py            App factory + ASGI app instance.
   worker.py          Celery app + task registry.
 alembic/             Migrations. env.py always reads the DB URL from
@@ -44,8 +47,8 @@ scripts/
   generate_jwt_keypair.py   Dev-only RS256 keypair generator.
 ```
 
-See `../../docs/phase-1-architecture.md` and
-`../../docs/phase-2-architecture.md` for why it's laid out this way.
+See `../../docs/phase-1-architecture.md`, `../../docs/phase-2-architecture.md`,
+and `../../docs/phase-3-architecture.md` for why it's laid out this way.
 
 ## Commands
 
@@ -100,3 +103,9 @@ deterministically.
 - `GET /sessions`, `DELETE /sessions/{id}`
 - `GET /audit-logs` — requires the `audit_logs.read` permission (seeded for
   the `admin` and `employee` roles; see `infrastructure/database/seed_data.py`)
+
+**Phase 3**
+
+- `POST /api/v1/public/contact` — public, rate-limited (5/min), backs the
+  website's Contact page. Silently no-ops (200, nothing stored) if the
+  hidden honeypot field is filled in.

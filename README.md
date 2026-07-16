@@ -4,19 +4,23 @@ Enterprise Loan DSA platform for banks and NBFCs: Loan Origination System
 (LOS), CRM, Lead Management (LMS), admin/employee/partner/customer portals,
 analytics, and an AI assistant layer, built as one modular monorepo.
 
-This repository is being built phase by phase. **Phase 1 — System
-Architecture & Foundation** is complete. Later phases (auth flows, public
-site, LMS, CRM, LOS, admin/employee/partner portals, AI, BI, hardening,
-deployment) build on top of this.
+This repository is being built phase by phase. **Phases 1-3 — System
+Architecture & Foundation, Authentication/RBAC, and the Public Website**
+are complete. Later phases (LMS, CRM, LOS, admin/employee/partner portals,
+AI, BI, hardening, deployment) build on top of this.
 
-## What's here (Phase 1)
+## What's here
 
 - `apps/web` — Next.js 16 (App Router, TypeScript, Tailwind v4, shadcn/ui,
-  TanStack Query, React Hook Form + Zod, Motion).
+  TanStack Query, React Hook Form + Zod, Motion). Includes the full public
+  marketing site (home, about, contact, careers, blog, FAQs, legal pages,
+  loan products, EMI/eligibility calculators) with SEO and analytics.
 - `apps/api` — FastAPI backend in a layered/clean-architecture style
   (`core` / `domain` / `services` / `infrastructure` / `api`), async
   SQLAlchemy 2.0 + Alembic, Celery, structured logging, OpenTelemetry,
-  Prometheus metrics.
+  Prometheus metrics. Includes full authentication (password + OTP login,
+  refresh-token rotation, password reset), RBAC, audit logging, and a
+  public contact-form endpoint.
 - `infra/` — NGINX reverse proxy config, Prometheus/Grafana/OTel-collector
   provisioning.
 - `docker-compose.yml` — the whole stack for local development.
@@ -24,8 +28,8 @@ deployment) build on top of this.
   migration up/down/up check, for both apps.
 
 See `apps/web/README.md` and `apps/api/README.md` for app-specific detail,
-and `docs/phase-1-architecture.md` for the design decisions behind the
-foundation (why uv, why RS256, why the repository pattern, etc.).
+and `docs/phase-1-architecture.md` / `docs/phase-2-architecture.md` /
+`docs/phase-3-architecture.md` for the design decisions behind each phase.
 
 ## Prerequisites
 

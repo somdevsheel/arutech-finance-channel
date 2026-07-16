@@ -19,6 +19,14 @@ COPY --from=deps /repo/node_modules ./node_modules
 COPY --from=deps /repo/apps/web/node_modules ./apps/web/node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_* vars are inlined into the client bundle at build time, so
+# they must be ARGs here — setting them via `docker-compose.yml`'s
+# top-level `environment:` only changes the *container's* runtime env,
+# which has no effect on an already-built bundle. Default matches this
+# compose stack's topology (NGINX on :80 fronting the app); override via
+# `build.args` for a real deployment's actual public domain.
+ARG NEXT_PUBLIC_SITE_URL=http://localhost
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 RUN pnpm --filter web run build
 
 FROM base AS runner

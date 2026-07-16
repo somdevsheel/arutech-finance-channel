@@ -12,11 +12,15 @@ from arutech_api.core.security import TokenError, TokenType, decode_token
 from arutech_api.domain.audit.repository import AuditLogRepository
 from arutech_api.domain.auth.ports import OtpDeliveryPort
 from arutech_api.domain.auth.repository import OtpRepository, RefreshTokenRepository
+from arutech_api.domain.contact.repository import ContactSubmissionRepository
 from arutech_api.domain.rbac.repository import RbacRepository
 from arutech_api.domain.users.entities import UserEntity
 from arutech_api.domain.users.repository import UserRepository
 from arutech_api.infrastructure.database.repositories.audit_log_repository import (
     SqlAlchemyAuditLogRepository,
+)
+from arutech_api.infrastructure.database.repositories.contact_repository import (
+    SqlAlchemyContactSubmissionRepository,
 )
 from arutech_api.infrastructure.database.repositories.otp_repository import (
     SqlAlchemyOtpRepository,
@@ -33,6 +37,7 @@ from arutech_api.infrastructure.database.repositories.user_repository import (
 from arutech_api.infrastructure.notifications.log_otp_delivery import LoggingOtpDeliveryChannel
 from arutech_api.services.audit_service import AuditService
 from arutech_api.services.auth_service import AuthService
+from arutech_api.services.contact_service import ContactService
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -55,6 +60,16 @@ def get_rbac_repository(session: DbSession) -> RbacRepository:
 
 def get_audit_log_repository(session: DbSession) -> AuditLogRepository:
     return SqlAlchemyAuditLogRepository(session)
+
+
+def get_contact_repository(session: DbSession) -> ContactSubmissionRepository:
+    return SqlAlchemyContactSubmissionRepository(session)
+
+
+def get_contact_service(
+    contact_repo: Annotated[ContactSubmissionRepository, Depends(get_contact_repository)],
+) -> ContactService:
+    return ContactService(contact_repo)
 
 
 _otp_delivery_channel = LoggingOtpDeliveryChannel()

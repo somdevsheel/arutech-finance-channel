@@ -29,9 +29,9 @@ class SqlAlchemyRbacRepository(RbacRepository):
 
     async def get_user_roles(self, user_id: uuid.UUID) -> list[RoleEntity]:
         result = await self._session.execute(
-            select(Role).join(user_roles, user_roles.c.role_id == Role.id).where(
-                user_roles.c.user_id == user_id
-            )
+            select(Role)
+            .join(user_roles, user_roles.c.role_id == Role.id)
+            .where(user_roles.c.user_id == user_id)
         )
         return [_role_to_entity(model) for model in result.scalars().all()]
 

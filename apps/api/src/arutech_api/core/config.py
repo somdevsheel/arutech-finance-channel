@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     JWT_ISSUER: str = "arutech-finance-platform"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    OTP_EXPIRE_MINUTES: int = 10
 
     DATABASE_URL: str = "postgresql+asyncpg://arutech:arutech@localhost:5432/arutech"
     DATABASE_POOL_SIZE: int = 10

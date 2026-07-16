@@ -39,9 +39,7 @@ class SqlAlchemyOtpRepository(OtpRepository):
         await self._session.refresh(model)
         return _to_entity(model)
 
-    async def get_latest_usable(
-        self, user_id: uuid.UUID, purpose: OtpPurpose
-    ) -> OtpEntity | None:
+    async def get_latest_usable(self, user_id: uuid.UUID, purpose: OtpPurpose) -> OtpEntity | None:
         now = datetime.now(UTC)
         result = await self._session.execute(
             select(OtpCode)

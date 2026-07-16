@@ -37,10 +37,11 @@ class TestJwtTokens:
         assert payload["type"] == TokenType.ACCESS.value
 
     def test_refresh_token_round_trips_the_subject(self) -> None:
-        token = create_refresh_token(subject="user-123")
+        token, jti = create_refresh_token(subject="user-123")
         payload = decode_token(token, TokenType.REFRESH)
         assert payload["sub"] == "user-123"
         assert payload["type"] == TokenType.REFRESH.value
+        assert payload["jti"] == jti
 
     def test_access_token_rejected_when_a_refresh_token_is_expected(self) -> None:
         token = create_access_token(subject="user-123")
@@ -64,7 +65,7 @@ class TestJwtTokens:
 
         from arutech_api.core.security import _create_token
 
-        token = _create_token("user-123", TokenType.ACCESS, timedelta(seconds=-1))
+        token, _ = _create_token("user-123", TokenType.ACCESS, timedelta(seconds=-1))
         with pytest.raises(TokenError):
             decode_token(token, TokenType.ACCESS)
 

@@ -88,3 +88,9 @@ addopts = "--cov=arutech_api --cov-report=term-missing"
 [tool.coverage.run]
 source = ["src/arutech_api"]
 omit = ["*/alembic/*"]
+# SQLAlchemy's async engine bridges to sync DBAPI calls via greenlet
+# (`greenlet_spawn`); without this, coverage.py's tracer loses track of
+# code on the caller's side of that switch — e.g. whole service-method
+# bodies would misreport as uncovered even when tests clearly exercise
+# their branches (see docs/phase-2-architecture.md).
+concurrency = ["greenlet", "thread"]

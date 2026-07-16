@@ -29,8 +29,8 @@ def main() -> None:
         .decode()
     )
 
-    print(f"JWT_PRIVATE_KEY=\"{private_pem.replace(chr(10), '\\n')}\"")
-    print(f"JWT_PUBLIC_KEY=\"{public_pem.replace(chr(10), '\\n')}\"")
+    print(f'JWT_PRIVATE_KEY="{private_pem.replace(chr(10), "\\n")}"')
+    print(f'JWT_PUBLIC_KEY="{public_pem.replace(chr(10), "\\n")}"')
 
 
 if __name__ == "__main__":

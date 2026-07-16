@@ -41,6 +41,11 @@ services:
       POSTGRES_USER: arutech
       POSTGRES_PASSWORD: arutech
       POSTGRES_DB: arutech
+    ports:
+      # Dev convenience only (DB clients, running Alembic from the host).
+      # Host port 5432 is often already taken by other local projects, so
+      # this binds a distinct port instead.
+      - "5442:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

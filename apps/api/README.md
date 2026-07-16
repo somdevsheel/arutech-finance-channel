@@ -25,13 +25,15 @@ src/arutech_api/
                       adapters against this same interface).
     rbac/            Role/Permission entities + repository interface.
     audit/           AuditLog entity + repository interface (list_for_entity
-                      backs Phase 5's lead activity/tracking view).
+                      backs Phase 5/6's activity/timeline views).
     users/           User entity + repository interface (Phase 1).
     contact/         ContactSubmission entity + repository interface (Phase 3).
     leads/           Lead + LeadTask entities, LeadStatus pipeline
                       (ALLOWED_TRANSITIONS state machine), LeadSource,
                       repository interfaces, scoring.py (a pure,
                       deterministic score_lead() function) (Phase 5).
+    crm/             CustomerProfile + Interaction entities, CustomerSegment,
+                      InteractionChannel, repository interfaces (Phase 6).
   infrastructure/    SQLAlchemy models + repository *implementations*, and
                       notifications/log_otp_delivery.py (the Phase 2
                       OtpDeliveryPort adapter — logs the code).
@@ -43,8 +45,11 @@ src/arutech_api/
                       lead_service.py on every real submission),
                       lead_service.py (duplicate detection, scoring,
                       auto-assignment, pipeline transitions, import/export,
-                      analytics, all audit-logged), and
-                      lead_task_service.py (follow-up tasks/reminders).
+                      analytics, all audit-logged), lead_task_service.py
+                      (follow-up tasks/reminders), customer_service.py
+                      (profile/relationship-manager/segment/tags/analytics/
+                      timeline), and interaction_service.py (call/email/
+                      WhatsApp/meeting/note logging).
   main.py            App factory + ASGI app instance.
   worker.py          Celery app + task registry.
 alembic/             Migrations. env.py always reads the DB URL from
@@ -60,7 +65,8 @@ scripts/
 
 See `../../docs/phase-1-architecture.md`, `../../docs/phase-2-architecture.md`,
 `../../docs/phase-3-architecture.md`, `../../docs/phase-4-architecture.md`,
-and `../../docs/phase-5-architecture.md` for why it's laid out this way.
+`../../docs/phase-5-architecture.md`, and `../../docs/phase-6-architecture.md`
+for why it's laid out this way.
 
 ## Commands
 
@@ -144,3 +150,24 @@ deterministically.
 - `GET /{lead_id}/activity` — that lead's audit-log timeline.
 - `GET /{lead_id}/tasks`, `POST /{lead_id}/tasks` — follow-up
   scheduling/reminders, assigned to an employee/admin.
+
+**Phase 6** — all under `/api/v1/customers`, requiring `customers.read`
+(GET routes) or `customers.manage` (POST/DELETE routes)
+
+- `GET ""` — list customer profiles, filterable by `segment`/`tag`/
+  `relationship_manager_id`.
+- `GET /analytics/summary` — customer counts by segment, interaction
+  counts by channel, customers without a relationship manager.
+- `GET /tags` — every tag currently in use, across all customers.
+- `GET /{user_id}` — Customer 360: profile, relationship manager, segment,
+  tags. Lazily creates the profile on first touch; 404 if the user
+  doesn't exist, 409 if it exists but isn't a `customer`-role account.
+- `POST /{user_id}/relationship-manager` — assigns an employee/admin;
+  rejects customers/partners (409) and unknown user IDs (404).
+- `POST /{user_id}/segment`
+- `POST /{user_id}/tags`, `DELETE /{user_id}/tags/{tag_name}`
+- `GET /{user_id}/interactions`, `POST /{user_id}/interactions` — call/
+  email/WhatsApp/meeting/note logging (one `channel`-discriminated table,
+  not five).
+- `GET /{user_id}/timeline` — that customer's audit-log entries and
+  interactions, merged and sorted chronologically.

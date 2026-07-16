@@ -13,6 +13,8 @@ from arutech_api.domain.audit.repository import AuditLogRepository
 from arutech_api.domain.auth.ports import OtpDeliveryPort
 from arutech_api.domain.auth.repository import OtpRepository, RefreshTokenRepository
 from arutech_api.domain.contact.repository import ContactSubmissionRepository
+from arutech_api.domain.crm.interaction_repository import InteractionRepository
+from arutech_api.domain.crm.repository import CustomerRepository
 from arutech_api.domain.leads.repository import LeadRepository
 from arutech_api.domain.leads.task_repository import LeadTaskRepository
 from arutech_api.domain.rbac.repository import RbacRepository
@@ -23,6 +25,12 @@ from arutech_api.infrastructure.database.repositories.audit_log_repository impor
 )
 from arutech_api.infrastructure.database.repositories.contact_repository import (
     SqlAlchemyContactSubmissionRepository,
+)
+from arutech_api.infrastructure.database.repositories.customer_repository import (
+    SqlAlchemyCustomerRepository,
+)
+from arutech_api.infrastructure.database.repositories.interaction_repository import (
+    SqlAlchemyInteractionRepository,
 )
 from arutech_api.infrastructure.database.repositories.lead_repository import (
     SqlAlchemyLeadRepository,
@@ -46,6 +54,8 @@ from arutech_api.infrastructure.notifications.log_otp_delivery import LoggingOtp
 from arutech_api.services.audit_service import AuditService
 from arutech_api.services.auth_service import AuthService
 from arutech_api.services.contact_service import ContactService
+from arutech_api.services.customer_service import CustomerService
+from arutech_api.services.interaction_service import InteractionService
 from arutech_api.services.lead_service import LeadService
 from arutech_api.services.lead_task_service import LeadTaskService
 
@@ -84,6 +94,14 @@ def get_lead_task_repository(session: DbSession) -> LeadTaskRepository:
     return SqlAlchemyLeadTaskRepository(session)
 
 
+def get_customer_repository(session: DbSession) -> CustomerRepository:
+    return SqlAlchemyCustomerRepository(session)
+
+
+def get_interaction_repository(session: DbSession) -> InteractionRepository:
+    return SqlAlchemyInteractionRepository(session)
+
+
 _otp_delivery_channel = LoggingOtpDeliveryChannel()
 
 
@@ -120,6 +138,25 @@ def get_lead_task_service(
     audit_service: Annotated[AuditService, Depends(get_audit_service)],
 ) -> LeadTaskService:
     return LeadTaskService(task_repo, lead_repo, user_repo, audit_service)
+
+
+def get_customer_service(
+    customer_repo: Annotated[CustomerRepository, Depends(get_customer_repository)],
+    interaction_repo: Annotated[InteractionRepository, Depends(get_interaction_repository)],
+    user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+    audit_repo: Annotated[AuditLogRepository, Depends(get_audit_log_repository)],
+) -> CustomerService:
+    return CustomerService(customer_repo, interaction_repo, user_repo, audit_service, audit_repo)
+
+
+def get_interaction_service(
+    interaction_repo: Annotated[InteractionRepository, Depends(get_interaction_repository)],
+    customer_repo: Annotated[CustomerRepository, Depends(get_customer_repository)],
+    user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> InteractionService:
+    return InteractionService(interaction_repo, customer_repo, user_repo, audit_service)
 
 
 def get_auth_service(

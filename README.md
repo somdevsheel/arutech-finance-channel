@@ -4,11 +4,12 @@ Enterprise Loan DSA platform for banks and NBFCs: Loan Origination System
 (LOS), CRM, Lead Management (LMS), admin/employee/partner/customer portals,
 analytics, and an AI assistant layer, built as one modular monorepo.
 
-This repository is being built phase by phase. **Phases 1-5 — System
+This repository is being built phase by phase. **Phases 1-6 — System
 Architecture & Foundation, Authentication/RBAC, the Public Website, the
-Customer Portal, and the Lead Management System (LMS)** are complete.
-Later phases (CRM, LOS, admin/employee/partner portals, AI, BI,
-hardening, deployment) build on top of this.
+Customer Portal, the Lead Management System (LMS), and Customer
+Relationship Management (CRM)** are complete. Later phases (LOS,
+admin/employee/partner portals, AI, BI, hardening, deployment) build on
+top of this.
 
 ## What's here
 
@@ -26,10 +27,13 @@ hardening, deployment) build on top of this.
   Prometheus metrics. Includes full authentication (password + OTP login,
   refresh-token rotation, password reset), RBAC, audit logging, trusted-
   proxy-aware rate limiting/IP attribution, a public contact-form
-  endpoint, and a full Lead Management System (capture, deterministic
+  endpoint, a full Lead Management System (capture, deterministic
   scoring, duplicate detection, least-loaded auto-assignment, pipeline
   status transitions, follow-up tasks/reminders, analytics, CSV
-  import/export).
+  import/export), and a Customer Relationship Management system
+  (Customer 360, relationship-manager assignment, segmentation, tags,
+  call/email/WhatsApp/meeting/note logging, a merged activity timeline,
+  and analytics).
 - `infra/` — NGINX reverse proxy config, Prometheus/Grafana/OTel-collector
   provisioning.
 - `docker-compose.yml` — the whole stack for local development.
@@ -39,7 +43,8 @@ hardening, deployment) build on top of this.
 See `apps/web/README.md` and `apps/api/README.md` for app-specific detail,
 and `docs/phase-1-architecture.md` / `docs/phase-2-architecture.md` /
 `docs/phase-3-architecture.md` / `docs/phase-4-architecture.md` /
-`docs/phase-5-architecture.md` for the design decisions behind each phase.
+`docs/phase-5-architecture.md` / `docs/phase-6-architecture.md` for the
+design decisions behind each phase.
 
 ## Prerequisites
 

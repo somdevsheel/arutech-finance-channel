@@ -1,0 +1,45 @@
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+!infra/**/*.example.pem
+
+# --- Node / JS ---
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+build/
+.turbo/
+coverage/
+*.tsbuildinfo
+.eslintcache
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+htmlcov/
+.coverage
+
+# --- Docker / infra state ---
+infra/monitoring/grafana/data/
+infra/minio/data/
+pgdata/
+
+# --- OS / editor ---
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.log
+
+# --- Tooling bookkeeping ---
+.claude/

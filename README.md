@@ -1,0 +1,118 @@
+# Arutech Finance Platform
+
+Enterprise Loan DSA platform for banks and NBFCs: Loan Origination System
+(LOS), CRM, Lead Management (LMS), admin/employee/partner/customer portals,
+analytics, and an AI assistant layer, built as one modular monorepo.
+
+This repository is being built phase by phase. **Phase 1 — System
+Architecture & Foundation** is complete. Later phases (auth flows, public
+site, LMS, CRM, LOS, admin/employee/partner portals, AI, BI, hardening,
+deployment) build on top of this.
+
+## What's here (Phase 1)
+
+- `apps/web` — Next.js 16 (App Router, TypeScript, Tailwind v4, shadcn/ui,
+  TanStack Query, React Hook Form + Zod, Motion).
+- `apps/api` — FastAPI backend in a layered/clean-architecture style
+  (`core` / `domain` / `services` / `infrastructure` / `api`), async
+  SQLAlchemy 2.0 + Alembic, Celery, structured logging, OpenTelemetry,
+  Prometheus metrics.
+- `infra/` — NGINX reverse proxy config, Prometheus/Grafana/OTel-collector
+  provisioning.
+- `docker-compose.yml` — the whole stack for local development.
+- `.github/workflows/ci.yml` — lint, typecheck, test, build, and a
+  migration up/down/up check, for both apps.
+
+See `apps/web/README.md` and `apps/api/README.md` for app-specific detail,
+and `docs/phase-1-architecture.md` for the design decisions behind the
+foundation (why uv, why RS256, why the repository pattern, etc.).
+
+## Prerequisites
+
+- Node.js 22+, [pnpm](https://pnpm.io) 9+
+- Python 3.12+, [uv](https://docs.astral.sh/uv/)
+- Docker + Docker Compose
+
+## Quick start (Docker, the whole stack)
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+
+# Generate a dev-only JWT signing keypair and append it to apps/api/.env
+cd apps/api && uv run python scripts/generate_jwt_keypair.py >> .env && cd ../..
+
+docker compose up --build
+```
+
+| Service              | URL                                      |
+| -------------------- | ----------------------------------------- |
+| App (via NGINX)      | http://localhost                          |
+| Web directly          | http://localhost:3000                    |
+| API directly           | http://localhost:8000/docs               |
+| Prometheus            | http://localhost:9090                    |
+| Grafana (admin/admin) | http://localhost:3001                    |
+| MinIO console          | http://localhost:9501 (arutech / see .env)|
+
+## Local development (without Docker)
+
+**API**
+
+```bash
+cd apps/api
+uv sync
+docker compose up -d postgres redis   # dependencies only
+uv run alembic upgrade head
+uv run uvicorn arutech_api.main:app --reload
+```
+
+**Web**
+
+```bash
+cd apps/web
+pnpm install
+pnpm dev
+```
+
+## Monorepo commands (from the repo root)
+
+```bash
+pnpm lint        # turbo-orchestrated lint across JS/TS apps
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+Python commands run from `apps/api/`: `uv run ruff check .`, `uv run ruff
+format .`, `uv run mypy`, `uv run pytest`.
+
+## Architecture at a glance
+
+```
+apps/
+  web/     Next.js — public site, customer portal, and (later) admin/
+           employee/partner portals share this workspace's tooling
+  api/     FastAPI — core / domain / services / infrastructure / api
+infra/
+  nginx/               reverse proxy + baseline rate limiting
+  monitoring/          Prometheus, Grafana, OTel collector config
+```
+
+The backend follows clean architecture: `domain/` defines entities and
+repository *interfaces* with zero framework dependencies; `infrastructure/`
+provides the SQLAlchemy-backed *implementations*; `api/` is HTTP-only
+(routing, request/response); `core/` is cross-cutting (config, security,
+logging, telemetry). This means swapping persistence, adding a second API
+transport, or unit-testing business logic never requires touching the other
+layers.
+
+## Security posture (Phase 1 baseline)
+
+- Argon2id password hashing, RS256-signed JWTs (keys never hardcoded —
+  `get_settings()` refuses to start in staging/production without them).
+- Security headers + Redis-backed rate limiting from day one.
+- Every DB change goes through Alembic; the app never calls
+  `create_all` outside of tests.
+
+Full OWASP Top 10 hardening is Phase 16 — see `docs/phase-1-architecture.md`
+for what's deliberately deferred and why.

@@ -41,5 +41,10 @@ pgdata/
 !.vscode/settings.json
 *.log
 
+# ntfs-3g "silly rename" backup files — an artifact of this project living
+# on a FUSE-mounted NTFS drive, not project content. See
+# docs/phase-4-architecture.md for how these showed up mid-session.
+*.ntfs-3g-*
+
 # --- Tooling bookkeeping ---
 .claude/

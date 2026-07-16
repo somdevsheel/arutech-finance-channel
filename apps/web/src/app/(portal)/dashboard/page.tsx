@@ -5,7 +5,6 @@ import { FileText, KeyRound, UserRound } from "lucide-react";
 import {
   Card,
   CardAction,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,

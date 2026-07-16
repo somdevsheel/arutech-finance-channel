@@ -7,6 +7,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from arutech_api.api.v1.router import api_router
 from arutech_api.core.config import settings
@@ -54,6 +55,12 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # Outermost middleware (added last = runs first): rewrites request.client
+    # from X-Forwarded-For/X-Forwarded-Proto, but only when the immediate
+    # peer is in TRUSTED_PROXY_IPS. Everything downstream — rate limiting
+    # (get_remote_address), audit logging (get_client_ip) — reads
+    # request.client, so this must run before they do.
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=settings.TRUSTED_PROXY_IPS)
 
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 

@@ -48,6 +48,13 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
+    # Peers allowed to set X-Forwarded-For/X-Forwarded-Proto (IPs or CIDR
+    # ranges). Defaults to loopback only, so `request.client.host` reflects
+    # the real caller unless the app is explicitly told to trust a proxy in
+    # front of it (NGINX, or — since Phase 4 — the web app's BFF calling
+    # this API server-to-server). See docs/phase-4-architecture.md.
+    TRUSTED_PROXY_IPS: list[str] = Field(default_factory=lambda: ["127.0.0.1"])
+
     OTEL_SERVICE_NAME: str = "arutech-api"
     OTEL_EXPORTER_OTLP_ENDPOINT: str | None = None
 

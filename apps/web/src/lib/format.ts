@@ -17,3 +17,12 @@ const dateFormatter = new Intl.DateTimeFormat("en-IN", {
 export function formatDate(isoDate: string): string {
   return dateFormatter.format(new Date(isoDate));
 }
+
+const dateTimeFormatter = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
+export function formatDateTime(isoDate: string): string {
+  return dateTimeFormatter.format(new Date(isoDate));
+}

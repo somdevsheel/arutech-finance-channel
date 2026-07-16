@@ -25,6 +25,10 @@ x-api-image: &api-image
     S3_ENDPOINT_URL: http://minio:9000
     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     CORS_ORIGINS: '["http://localhost","http://localhost:3000"]'
+    # The web container calls this API server-to-server (customer-portal
+    # BFF, Phase 4) and nginx also proxies to it directly; both live on
+    # this compose network's fixed subnet (see the `networks:` block above).
+    TRUSTED_PROXY_IPS: '["172.28.0.0/16"]'
   depends_on:
     postgres:
       condition: service_healthy

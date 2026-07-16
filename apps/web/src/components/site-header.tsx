@@ -34,7 +34,10 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-2 md:flex">
+          <Button size="sm" variant="ghost" render={<Link href="/login" />}>
+            Log in
+          </Button>
           <Button size="sm" render={<Link href="/loans" />}>
             Apply Now
           </Button>
@@ -57,7 +60,15 @@ export function SiteHeader() {
                 </Link>
               ))}
               <Button
+                variant="outline"
                 className="mt-2"
+                render={
+                  <Link href="/login" onClick={() => setMobileOpen(false)} />
+                }
+              >
+                Log in
+              </Button>
+              <Button
                 render={
                   <Link href="/loans" onClick={() => setMobileOpen(false)} />
                 }

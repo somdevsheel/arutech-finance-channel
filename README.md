@@ -6,8 +6,8 @@ analytics, and an AI assistant layer, built as one modular monorepo.
 
 This repository is being built phase by phase. **Phases 1-5 — System
 Architecture & Foundation, Authentication/RBAC, the Public Website, the
-Customer Portal, and Lead Scoring & Pipeline** are complete. Later phases
-(LMS/CRM continued, LOS, admin/employee/partner portals, AI, BI,
+Customer Portal, and the Lead Management System (LMS)** are complete.
+Later phases (CRM, LOS, admin/employee/partner portals, AI, BI,
 hardening, deployment) build on top of this.
 
 ## What's here
@@ -26,8 +26,10 @@ hardening, deployment) build on top of this.
   Prometheus metrics. Includes full authentication (password + OTP login,
   refresh-token rotation, password reset), RBAC, audit logging, trusted-
   proxy-aware rate limiting/IP attribution, a public contact-form
-  endpoint, and lead scoring/pipeline management (contact submissions
-  automatically become triaged, assignable leads).
+  endpoint, and a full Lead Management System (capture, deterministic
+  scoring, duplicate detection, least-loaded auto-assignment, pipeline
+  status transitions, follow-up tasks/reminders, analytics, CSV
+  import/export).
 - `infra/` — NGINX reverse proxy config, Prometheus/Grafana/OTel-collector
   provisioning.
 - `docker-compose.yml` — the whole stack for local development.

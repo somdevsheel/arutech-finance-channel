@@ -41,3 +41,11 @@ class SqlAlchemyAuditLogRepository(AuditLogRepository):
             select(AuditLog).order_by(AuditLog.created_at.desc()).limit(limit).offset(offset)
         )
         return [_to_entity(model) for model in result.scalars().all()]
+
+    async def list_for_entity(self, entity_type: str, entity_id: str) -> list[AuditLogEntity]:
+        result = await self._session.execute(
+            select(AuditLog)
+            .where(AuditLog.entity_type == entity_type, AuditLog.entity_id == entity_id)
+            .order_by(AuditLog.created_at.asc())
+        )
+        return [_to_entity(model) for model in result.scalars().all()]

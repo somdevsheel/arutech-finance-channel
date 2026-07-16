@@ -1,7 +1,7 @@
 import uuid
 from abc import ABC, abstractmethod
 
-from arutech_api.domain.users.entities import UserEntity
+from arutech_api.domain.users.entities import UserEntity, UserRole
 
 
 class UserRepository(ABC):
@@ -24,3 +24,10 @@ class UserRepository(ABC):
 
     @abstractmethod
     async def update(self, user: UserEntity) -> UserEntity: ...
+
+    @abstractmethod
+    async def list_by_role(self, role: UserRole, *, active_only: bool = True) -> list[UserEntity]:
+        """Phase 5 uses this to find candidate employees for lead
+        auto-assignment; kept general (any role, optional active filter)
+        since it's a reasonable thing later phases will also need."""
+        ...

@@ -1,7 +1,7 @@
 from arutech_api.infrastructure.database.models.audit_log import AuditLog
 from arutech_api.infrastructure.database.models.auth import OtpCode, RefreshToken
 from arutech_api.infrastructure.database.models.contact import ContactSubmission
-from arutech_api.infrastructure.database.models.leads import Lead
+from arutech_api.infrastructure.database.models.leads import Lead, LeadTask
 from arutech_api.infrastructure.database.models.rbac import (
     Permission,
     Role,
@@ -14,6 +14,7 @@ __all__ = [
     "AuditLog",
     "ContactSubmission",
     "Lead",
+    "LeadTask",
     "OtpCode",
     "Permission",
     "RefreshToken",

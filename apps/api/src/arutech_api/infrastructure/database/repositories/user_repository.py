@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from arutech_api.core.exceptions import NotFoundError
-from arutech_api.domain.users.entities import UserEntity
+from arutech_api.domain.users.entities import UserEntity, UserRole
 from arutech_api.domain.users.repository import UserRepository
 from arutech_api.infrastructure.database.models.user import User
 
@@ -56,6 +56,13 @@ class SqlAlchemyUserRepository(UserRepository):
         await self._session.flush()
         await self._session.refresh(model)
         return _to_entity(model)
+
+    async def list_by_role(self, role: UserRole, *, active_only: bool = True) -> list[UserEntity]:
+        query = select(User).where(User.role == role)
+        if active_only:
+            query = query.where(User.is_active.is_(True))
+        result = await self._session.execute(query.order_by(User.created_at))
+        return [_to_entity(model) for model in result.scalars().all()]
 
     async def update(self, user: UserEntity) -> UserEntity:
         model = await self._session.get(User, user.id)

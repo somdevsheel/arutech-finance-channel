@@ -8,6 +8,7 @@ from arutech_api.infrastructure.database.models.crm import (
     customer_tags,
 )
 from arutech_api.infrastructure.database.models.leads import Lead, LeadTask
+from arutech_api.infrastructure.database.models.loans import LoanApplication, LoanDocument
 from arutech_api.infrastructure.database.models.rbac import (
     Permission,
     Role,
@@ -23,6 +24,8 @@ __all__ = [
     "Interaction",
     "Lead",
     "LeadTask",
+    "LoanApplication",
+    "LoanDocument",
     "OtpCode",
     "Permission",
     "RefreshToken",

@@ -21,6 +21,8 @@ PERMISSIONS: list[tuple[str, str]] = [
     ("leads.manage", "Update lead status and assignment"),
     ("customers.read", "View customer profiles, interactions, and analytics"),
     ("customers.manage", "Update customer segment, tags, relationship manager, and interactions"),
+    ("loans.read", "View loan applications, documents, and analytics"),
+    ("loans.manage", "Review, approve, sanction, disburse, and close loan applications"),
 ]
 
 # Role -> permission codes. Matches the existing `UserRole` enum
@@ -36,6 +38,8 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         "leads.manage",
         "customers.read",
         "customers.manage",
+        "loans.read",
+        "loans.manage",
     ],
     "partner": [],
     "customer": [],

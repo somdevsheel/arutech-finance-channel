@@ -17,6 +17,8 @@ from arutech_api.domain.crm.interaction_repository import InteractionRepository
 from arutech_api.domain.crm.repository import CustomerRepository
 from arutech_api.domain.leads.repository import LeadRepository
 from arutech_api.domain.leads.task_repository import LeadTaskRepository
+from arutech_api.domain.loans.document_repository import LoanDocumentRepository
+from arutech_api.domain.loans.repository import LoanApplicationRepository
 from arutech_api.domain.rbac.repository import RbacRepository
 from arutech_api.domain.users.entities import UserEntity
 from arutech_api.domain.users.repository import UserRepository
@@ -38,6 +40,12 @@ from arutech_api.infrastructure.database.repositories.lead_repository import (
 from arutech_api.infrastructure.database.repositories.lead_task_repository import (
     SqlAlchemyLeadTaskRepository,
 )
+from arutech_api.infrastructure.database.repositories.loan_application_repository import (
+    SqlAlchemyLoanApplicationRepository,
+)
+from arutech_api.infrastructure.database.repositories.loan_document_repository import (
+    SqlAlchemyLoanDocumentRepository,
+)
 from arutech_api.infrastructure.database.repositories.otp_repository import (
     SqlAlchemyOtpRepository,
 )
@@ -58,6 +66,8 @@ from arutech_api.services.customer_service import CustomerService
 from arutech_api.services.interaction_service import InteractionService
 from arutech_api.services.lead_service import LeadService
 from arutech_api.services.lead_task_service import LeadTaskService
+from arutech_api.services.loan_application_service import LoanApplicationService
+from arutech_api.services.loan_document_service import LoanDocumentService
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -100,6 +110,14 @@ def get_customer_repository(session: DbSession) -> CustomerRepository:
 
 def get_interaction_repository(session: DbSession) -> InteractionRepository:
     return SqlAlchemyInteractionRepository(session)
+
+
+def get_loan_application_repository(session: DbSession) -> LoanApplicationRepository:
+    return SqlAlchemyLoanApplicationRepository(session)
+
+
+def get_loan_document_repository(session: DbSession) -> LoanDocumentRepository:
+    return SqlAlchemyLoanDocumentRepository(session)
 
 
 _otp_delivery_channel = LoggingOtpDeliveryChannel()
@@ -157,6 +175,27 @@ def get_interaction_service(
     audit_service: Annotated[AuditService, Depends(get_audit_service)],
 ) -> InteractionService:
     return InteractionService(interaction_repo, customer_repo, user_repo, audit_service)
+
+
+def get_loan_application_service(
+    application_repo: Annotated[
+        LoanApplicationRepository, Depends(get_loan_application_repository)
+    ],
+    document_repo: Annotated[LoanDocumentRepository, Depends(get_loan_document_repository)],
+    user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> LoanApplicationService:
+    return LoanApplicationService(application_repo, document_repo, user_repo, audit_service)
+
+
+def get_loan_document_service(
+    document_repo: Annotated[LoanDocumentRepository, Depends(get_loan_document_repository)],
+    application_repo: Annotated[
+        LoanApplicationRepository, Depends(get_loan_application_repository)
+    ],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> LoanDocumentService:
+    return LoanDocumentService(document_repo, application_repo, audit_service)
 
 
 def get_auth_service(

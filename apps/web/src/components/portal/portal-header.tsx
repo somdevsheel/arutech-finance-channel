@@ -17,6 +17,7 @@ import { SignOutButton } from "@/components/portal/sign-out-button";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/loans", label: "Loans" },
   { href: "/profile", label: "Profile" },
   { href: "/sessions", label: "Sessions" },
 ];
@@ -71,6 +72,7 @@ export function PortalHeader({ user }: { user: AuthUser }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link href="/loans" />}>Loans</DropdownMenuItem>
             <DropdownMenuItem render={<Link href="/profile" />}>Profile</DropdownMenuItem>
             <DropdownMenuItem render={<Link href="/sessions" />}>Sessions</DropdownMenuItem>
             <DropdownMenuSeparator />

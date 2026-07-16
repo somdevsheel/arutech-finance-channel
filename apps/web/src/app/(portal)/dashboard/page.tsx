@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getActiveSessions, getCurrentUser } from "@/lib/auth/session";
+import { getOwnLoanApplications } from "@/lib/loans/session";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -21,7 +22,13 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const sessions = await getActiveSessions();
+  const [sessions, applications] = await Promise.all([
+    getActiveSessions(),
+    getOwnLoanApplications(),
+  ]);
+  const activeApplications = applications.filter(
+    (application) => !["draft", "closed", "rejected", "withdrawn"].includes(application.status),
+  );
 
   return (
     <div className="space-y-8">
@@ -42,9 +49,19 @@ export default async function DashboardPage() {
               <CardTitle>Loan applications</CardTitle>
             </div>
             <CardDescription>
-              You don&apos;t have any applications yet. Applying online arrives in a later
-              phase of the platform.
+              {applications.length === 0
+                ? "You don't have any applications yet."
+                : `${applications.length} total, ${activeApplications.length} in progress.`}
             </CardDescription>
+            <CardAction>
+              <Button
+                size="sm"
+                variant="outline"
+                render={<Link href={applications.length === 0 ? "/loans/apply" : "/loans"} />}
+              >
+                {applications.length === 0 ? "Apply now" : "View"}
+              </Button>
+            </CardAction>
           </CardHeader>
         </Card>
 

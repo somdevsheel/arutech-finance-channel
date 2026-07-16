@@ -47,13 +47,18 @@ export default async function LoanProductPage({
           <p className="mt-4 max-w-2xl text-muted-foreground">
             {product.description}
           </p>
-          <Button
-            size="lg"
-            className="mt-8"
-            render={<Link href="/tools/eligibility-calculator" />}
-          >
-            Check Your Eligibility <ArrowRight className="ml-1 size-4" />
-          </Button>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button size="lg" render={<Link href={`/loans/apply?product=${product.slug}`} />}>
+              Apply Now <ArrowRight className="ml-1 size-4" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              render={<Link href="/tools/eligibility-calculator" />}
+            >
+              Check Your Eligibility
+            </Button>
+          </div>
         </div>
       </section>
 

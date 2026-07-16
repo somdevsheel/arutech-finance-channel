@@ -16,7 +16,12 @@ function matchesPrefix(pathname: string, prefixes: string[]): boolean {
 
 function redirectToLogin(request: NextRequest): NextResponse {
   const url = new URL("/login", request.url);
-  url.searchParams.set("next", request.nextUrl.pathname);
+  // pathname + search, not just pathname — e.g. a logged-out visitor
+  // hitting /loans/apply?product=gold-loan from the marketing site
+  // should land back on that same pre-filled apply page after signing
+  // in, not a bare /loans/apply that silently drops which product they
+  // picked.
+  url.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
   return NextResponse.redirect(url);
 }
 

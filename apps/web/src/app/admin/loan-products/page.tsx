@@ -16,6 +16,7 @@ import {
 import { formatInr } from "@/lib/format";
 import { getLoanProducts } from "@/lib/admin/session";
 import { createLoanProductAction, setLoanProductActiveAction } from "@/lib/admin/actions";
+import { AdminCreateForm } from "@/components/admin/admin-create-form";
 import { ToggleActiveButton } from "@/components/admin/toggle-active-button";
 
 export const metadata: Metadata = {
@@ -41,7 +42,10 @@ export default async function AdminLoanProductsPage() {
           <CardTitle>New Loan Product</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createLoanProductAction} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <AdminCreateForm
+            action={createLoanProductAction}
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          >
             <div className="space-y-1.5">
               <Label htmlFor="slug">Slug</Label>
               <Input id="slug" name="slug" required placeholder="e.g. top-up-loan" />
@@ -85,7 +89,7 @@ export default async function AdminLoanProductsPage() {
             <div className="sm:col-span-2 lg:col-span-3">
               <Button type="submit">Create Product</Button>
             </div>
-          </form>
+          </AdminCreateForm>
         </CardContent>
       </Card>
 

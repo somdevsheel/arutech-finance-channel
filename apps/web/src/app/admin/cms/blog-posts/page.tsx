@@ -16,6 +16,7 @@ import {
 import { formatDate } from "@/lib/format";
 import { getBlogPosts } from "@/lib/admin/session";
 import { createBlogPostAction } from "@/lib/admin/actions";
+import { AdminCreateForm } from "@/components/admin/admin-create-form";
 import { BlogPostActions } from "@/components/admin/blog-post-actions";
 
 export const metadata: Metadata = {
@@ -40,7 +41,7 @@ export default async function AdminBlogPostsPage() {
           <CardTitle>New Post</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createBlogPostAction} className="grid gap-3 sm:grid-cols-2">
+          <AdminCreateForm action={createBlogPostAction} className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="slug">Slug</Label>
               <Input id="slug" name="slug" required />
@@ -72,7 +73,7 @@ export default async function AdminBlogPostsPage() {
             <div className="sm:col-span-2">
               <Button type="submit">Create Draft</Button>
             </div>
-          </form>
+          </AdminCreateForm>
         </CardContent>
       </Card>
 

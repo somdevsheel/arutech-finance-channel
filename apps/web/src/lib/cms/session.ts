@@ -7,7 +7,19 @@ import type { BlogPost } from "@/types/admin";
 // Phase 9 (see docs/phase-9-architecture.md).
 
 export async function listPublishedBlogPosts(): Promise<BlogPost[]> {
-  return apiFetch<BlogPost[]>("/api/v1/public/blog-posts");
+  // Absorbs failures (including build-time "API unreachable", e.g. a CI
+  // stage that builds the web image before the API is up — see
+  // docs/phase-9-architecture.md) into an empty list rather than
+  // crashing the page/build. A public listing quietly showing zero
+  // posts is a safer degradation than a 500 for site visitors;
+  // getPublishedBlogPost (a specific slug) doesn't do this same
+  // blanket catch, since silently turning "API down" into "post not
+  // found" would be actively misleading.
+  try {
+    return await apiFetch<BlogPost[]>("/api/v1/public/blog-posts");
+  } catch {
+    return [];
+  }
 }
 
 export async function getPublishedBlogPost(slug: string): Promise<BlogPost | null> {

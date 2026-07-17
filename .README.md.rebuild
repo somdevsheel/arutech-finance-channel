@@ -4,25 +4,30 @@ Enterprise Loan DSA platform for banks and NBFCs: Loan Origination System
 (LOS), CRM, Lead Management (LMS), admin/employee/partner/customer portals,
 analytics, and an AI assistant layer, built as one modular monorepo.
 
-This repository is being built phase by phase. **Phases 1-7 — System
+This repository is being built phase by phase. **Phases 1-9 — System
 Architecture & Foundation, Authentication/RBAC, the Public Website, the
 Customer Portal, the Lead Management System (LMS), Customer Relationship
-Management (CRM), and the Loan Origination System (LOS)** are complete.
-Later phases (admin/employee/partner portals, AI, BI, hardening,
-deployment) build on top of this.
+Management (CRM), the Loan Origination System (LOS), the Admin Dashboard,
+and the Admin Panel** are complete. Later phases (employee/partner
+portals, AI, BI, hardening, deployment) build on top of this.
 
 ## What's here
 
 - `apps/web` — Next.js 16 (App Router, TypeScript, Tailwind v4, shadcn/ui,
   TanStack Query, React Hook Form + Zod, Motion). Includes the full public
   marketing site (home, about, contact, careers, blog, FAQs, legal pages,
-  loan products, EMI/eligibility calculators) with SEO and analytics, plus
-  a signed-in customer portal (login/register/OTP/password reset,
-  dashboard, profile, session/device management, and loan applications —
-  browse products, apply, track status through the full origination
-  pipeline, submit checklist documents) — a Server-Actions-based BFF that
-  moves the browser onto httpOnly session cookies in front of the token
-  API below.
+  loan products, EMI/eligibility calculators — blog now database-backed
+  via a public CMS API) with SEO and analytics, a signed-in customer
+  portal (login/register/OTP/password reset, dashboard, profile,
+  session/device management, and loan applications — browse products,
+  apply, track status through the full origination pipeline, submit
+  checklist documents), and an admin area (`/admin/*`, role-gated):
+  executive dashboard (KPIs, lead funnel, activity heatmap, alerts,
+  system health) plus a full admin panel (user/role/permission
+  management, lender and loan product catalogs, notification templates,
+  CMS, settings/feature flags, audit logs) — a Server-Actions-based BFF
+  that moves the browser onto httpOnly session cookies in front of the
+  token API below.
 - `apps/api` — FastAPI backend in a layered/clean-architecture style
   (`core` / `domain` / `services` / `infrastructure` / `api`), async
   SQLAlchemy 2.0 + Alembic, Celery, structured logging, OpenTelemetry,
@@ -35,10 +40,15 @@ deployment) build on top of this.
   import/export), a Customer Relationship Management system (Customer
   360, relationship-manager assignment, segmentation, tags, call/email/
   WhatsApp/meeting/note logging, a merged activity timeline, and
-  analytics), and a Loan Origination System (application, KYC,
-  eligibility, verification, document checklist, credit assessment,
-  employee assignment, approval, sanction, disbursement, commission
-  tracking, closure).
+  analytics), a Loan Origination System (application, KYC, eligibility,
+  verification, document checklist, credit assessment, employee
+  assignment, approval, sanction, disbursement, commission tracking,
+  closure), a read-only executive dashboard (business KPIs, lead
+  funnel, activity heatmap, deterministic alerts, system health), and a
+  full admin panel (user/role/permission management, a bank/NBFC lender
+  catalog, a database-backed loan product catalog, notification
+  templates, a blog CMS with a public read API, and typed system
+  settings/feature flags).
 - `infra/` — NGINX reverse proxy config, Prometheus/Grafana/OTel-collector
   provisioning.
 - `docker-compose.yml` — the whole stack for local development.
@@ -49,7 +59,8 @@ See `apps/web/README.md` and `apps/api/README.md` for app-specific detail,
 and `docs/phase-1-architecture.md` / `docs/phase-2-architecture.md` /
 `docs/phase-3-architecture.md` / `docs/phase-4-architecture.md` /
 `docs/phase-5-architecture.md` / `docs/phase-6-architecture.md` /
-`docs/phase-7-architecture.md` for the design decisions behind each
+`docs/phase-7-architecture.md` / `docs/phase-8-architecture.md` /
+`docs/phase-9-architecture.md` for the design decisions behind each
 phase.
 
 ## Prerequisites
@@ -115,8 +126,9 @@ format .`, `uv run mypy`, `uv run pytest`.
 
 ```
 apps/
-  web/     Next.js — public site, customer portal, and (later) admin/
-           employee/partner portals share this workspace's tooling
+  web/     Next.js — public site, customer portal, and admin area share
+           this workspace's tooling; employee/partner portals (Phases
+           10-11) land as their own top-level folders when they come up
   api/     FastAPI — core / domain / services / infrastructure / api
 infra/
   nginx/               reverse proxy + baseline rate limiting

@@ -18,6 +18,7 @@ import {
   createNotificationTemplateAction,
   setNotificationTemplateActiveAction,
 } from "@/lib/admin/actions";
+import { AdminCreateForm } from "@/components/admin/admin-create-form";
 import { ToggleActiveButton } from "@/components/admin/toggle-active-button";
 
 export const metadata: Metadata = {
@@ -43,7 +44,10 @@ export default async function AdminNotificationTemplatesPage() {
           <CardTitle>New Template</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createNotificationTemplateAction} className="grid gap-3 sm:grid-cols-2">
+          <AdminCreateForm
+            action={createNotificationTemplateAction}
+            className="grid gap-3 sm:grid-cols-2"
+          >
             <div className="space-y-1.5">
               <Label htmlFor="code">Code</Label>
               <Input id="code" name="code" required placeholder="e.g. loan.approved" />
@@ -77,7 +81,7 @@ export default async function AdminNotificationTemplatesPage() {
             <div className="sm:col-span-2">
               <Button type="submit">Create Template</Button>
             </div>
-          </form>
+          </AdminCreateForm>
         </CardContent>
       </Card>
 

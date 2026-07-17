@@ -23,10 +23,16 @@ src/arutech_api/
     auth/            RefreshToken/Otp entities + repository interfaces +
                       OtpDeliveryPort (Phase 13 adds real SMS/email
                       adapters against this same interface).
-    rbac/            Role/Permission entities + repository interface.
+    rbac/            Role/Permission entities + repository interface —
+                      extended in Phase 9 with full CRUD (create/delete
+                      role, grant/revoke permission, list permissions).
     audit/           AuditLog entity + repository interface (list_for_entity
-                      backs Phase 5/6/7's activity/timeline views).
-    users/           User entity + repository interface (Phase 1).
+                      backs Phase 5/6/7's activity/timeline views; its
+                      listing endpoint got its first admin frontend page
+                      in Phase 9).
+    users/           User entity + repository interface (Phase 1) —
+                      extended in Phase 9 with list_users/set_active/
+                      set_role for User Management.
     contact/         ContactSubmission entity + repository interface (Phase 3).
     leads/           Lead + LeadTask entities, LeadStatus pipeline
                       (ALLOWED_TRANSITIONS state machine), LeadSource,
@@ -39,14 +45,28 @@ src/arutech_api/
                       KycStatus/VerificationStatus/EligibilityStatus/
                       RiskCategory/CommissionStatus, calculations.py (EMI +
                       eligibility, ported from apps/web; credit assessment,
-                      a documented heuristic), products.py (per-product
-                      bounds, mirrored from apps/web), repository
-                      interfaces (Phase 7).
+                      a documented heuristic), repository interfaces
+                      (Phase 7). product_entities.py/product_repository.py
+                      (Phase 9) — the database-backed LoanProductEntity
+                      that replaced products.py's old hardcoded dict;
+                      products.py itself lives on as seed data only (see
+                      its module docstring).
     dashboard/       ExecutiveKpis/LeadFunnel/ActivityHeatmap/Alert/
                       SystemHealthSummary read-models (none back a table —
                       all computed at read time from Lead/Customer/
                       LoanApplication/User data), and alerts.py (a pure
                       evaluate_alerts() threshold function) (Phase 8).
+    lenders/         LenderEntity (type: bank|nbfc, commission_rate_percent),
+                      repository interface (Phase 9).
+    notifications/   NotificationTemplateEntity (channel-discriminated:
+                      email/sms/whatsapp), repository interface — content
+                      only, nothing sends yet (Phase 9).
+    cms/             BlogPostEntity + BlogSection, repository interface —
+                      scoped to blog posts (Phase 9).
+    settings/        SystemSettingEntity (typed key-value:
+                      string/boolean/number), repository interface,
+                      parse_bool_setting() — the one real, wired consumer
+                      is LeadService's auto-assignment toggle (Phase 9).
   infrastructure/    SQLAlchemy models + repository *implementations*, and
                       notifications/log_otp_delivery.py (the Phase 2
                       OtpDeliveryPort adapter — logs the code).
@@ -65,11 +85,17 @@ src/arutech_api/
                       WhatsApp/meeting/note logging), loan_application_
                       service.py (every pipeline transition, commission
                       calculation), loan_document_service.py (checklist
-                      listing, self-submission, staff review), and
+                      listing, self-submission, staff review),
                       dashboard_service.py (KPIs/funnel/heatmap/alerts/
                       system health — composes the repositories above
                       directly, not their services; see
-                      docs/phase-8-architecture.md).
+                      docs/phase-8-architecture.md), user_admin_service.py
+                      + rbac_service.py (User/Role/Permission Management),
+                      lender_service.py, loan_product_service.py,
+                      notification_template_service.py, blog_post_
+                      service.py, and settings_service.py (Phase 9's Admin
+                      Panel — one service per subsystem, same
+                      create/list/get/update/audit-log shape throughout).
   main.py            App factory + ASGI app instance.
   worker.py          Celery app + task registry.
 alembic/             Migrations. env.py always reads the DB URL from
@@ -85,7 +111,7 @@ scripts/
 ```
 
 See `../../docs/phase-1-architecture.md` through
-`../../docs/phase-8-architecture.md` for why it's laid out this way.
+`../../docs/phase-9-architecture.md` for why it's laid out this way.
 
 ## Commands
 
@@ -121,7 +147,16 @@ Postgres's (no `ISODOW`, for instance) — `dashboard_service.py`'s
 day-of-week queries deliberately use `EXTRACT(DOW ...)`, the one field
 both dialects support with identical numbering, so the test suite and
 production stay on the same code path; see
-docs/phase-8-architecture.md's "Bugs found" section.
+docs/phase-8-architecture.md's "Bugs found" section. Similarly,
+`StrEnum`-backed columns (`Lender.type`, `NotificationTemplate.channel`,
+`SystemSetting.value_type`) all pass `values_callable` so Postgres stores
+lowercase values matching the domain entities instead of defaulting to
+uppercase enum *names* — see docs/phase-9-architecture.md's "Database
+schema" section for the bug this fixed. `conftest.py` also seeds the
+Phase 9 loan product catalog (`_seed_loan_products`, importing
+`domain.loans.products.LOAN_PRODUCTS` directly, the same way
+`_seed_rbac` imports `seed_data.PERMISSIONS`) and one starter system
+setting (`_seed_settings`).
 
 ## API surface
 
@@ -237,3 +272,34 @@ customers).
   backlog); see `domain/dashboard/alerts.py`.
 - `GET /system-health` — wraps the same checks `/health/ready` performs,
   as a dashboard-friendly read.
+
+**Phase 9** — six subsystems. Every permission below is admin-only (not
+granted to `employee`) — see `docs/phase-9-architecture.md`.
+
+- `/api/v1/admin/users` (`users.read`/`users.manage`) — `GET ""` (filter
+  by `role`/`is_active`), `GET /{id}`, `POST /{id}/activate`,
+  `POST /{id}/deactivate`, `POST /{id}/role` (also re-syncs the RBAC
+  system-role binding).
+- `/api/v1/admin/roles` + `/api/v1/admin/permissions` (`roles.manage`
+  gates all of it, read and write) — `GET/POST /roles`,
+  `GET/DELETE /roles/{id}` (409 deleting a system role),
+  `GET/POST /roles/{id}/permissions`,
+  `DELETE /roles/{id}/permissions/{code}`,
+  `POST/DELETE /roles/{id}/users/{user_id}`, `GET /permissions`.
+- `/api/v1/lenders` (`lenders.read`/`lenders.manage`) — bank/NBFC catalog
+  CRUD + activate/deactivate; carries `commission_rate_percent`.
+- `/api/v1/loan-products` (`loan_products.read`/`loan_products.manage`)
+  — the database-backed replacement for the old hardcoded catalog;
+  `LoanApplicationService` reads from here now.
+- `/api/v1/notification-templates`
+  (`notification_templates.read`/`.manage`) — channel-discriminated
+  (email/sms/whatsapp) template CRUD; content only, nothing sends.
+- `/api/v1/cms/blog-posts` (`cms.read`/`cms.manage`, admin) +
+  `/api/v1/public/blog-posts` (public, no auth) — CRUD + publish/
+  unpublish on the admin side; the public side only ever returns
+  `is_published=True` posts, 404 for anything else (never confirms a
+  draft's existence).
+- `/api/v1/admin/settings` (`settings.read`/`settings.manage`) —
+  `GET ""`, `GET/PUT /{key}`. Covers Settings, Feature Flags, and
+  Workflow Management as one typed key-value mechanism; keys are
+  migration-seeded, not creatable via the API.

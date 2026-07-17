@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPermissions, getRolePermissions, getRoles } from "@/lib/admin/session";
 import { grantPermissionAction } from "@/lib/admin/actions";
+import { AdminCreateForm } from "@/components/admin/admin-create-form";
 import { RevokePermissionButton } from "@/components/admin/revoke-permission-button";
 
 export const metadata: Metadata = {
@@ -67,7 +68,7 @@ export default async function AdminRoleDetailPage({
             <CardTitle>Grant a Permission</CardTitle>
           </CardHeader>
           <CardContent>
-            <form
+            <AdminCreateForm
               action={grantPermissionAction.bind(null, role.id)}
               className="flex flex-wrap items-end gap-3"
             >
@@ -85,7 +86,7 @@ export default async function AdminRoleDetailPage({
               <Button type="submit" size="sm">
                 Grant
               </Button>
-            </form>
+            </AdminCreateForm>
           </CardContent>
         </Card>
       )}

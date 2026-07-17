@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { getRoles } from "@/lib/admin/session";
 import { createRoleAction } from "@/lib/admin/actions";
+import { AdminCreateForm } from "@/components/admin/admin-create-form";
 import { DeleteRoleButton } from "@/components/admin/delete-role-button";
 
 export const metadata: Metadata = {
@@ -40,7 +41,7 @@ export default async function AdminRolesPage() {
           <CardTitle>New Custom Role</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createRoleAction} className="flex flex-wrap items-end gap-3">
+          <AdminCreateForm action={createRoleAction} className="flex flex-wrap items-end gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="name">Name</Label>
               <Input id="name" name="name" required className="w-48" />
@@ -50,7 +51,7 @@ export default async function AdminRolesPage() {
               <Input id="description" name="description" className="w-64" />
             </div>
             <Button type="submit">Create Role</Button>
-          </form>
+          </AdminCreateForm>
         </CardContent>
       </Card>
 

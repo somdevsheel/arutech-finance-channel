@@ -7,6 +7,11 @@ import { articleJsonLd } from "@/lib/structured-data";
 export const revalidate = 300;
 
 export async function generateStaticParams() {
+  // listPublishedBlogPosts() already absorbs a build-time-unreachable
+  // API into an empty list (see lib/cms/session.ts) — an empty return
+  // here just means every post renders on-demand at request time
+  // instead of being pre-rendered (dynamicParams defaults to true, so
+  // no post 404s, it's just not statically generated ahead of time).
   const posts = await listPublishedBlogPosts();
   return posts.map((post) => ({ slug: post.slug }));
 }

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { getLenders } from "@/lib/admin/session";
 import { createLenderAction, setLenderActiveAction } from "@/lib/admin/actions";
+import { AdminCreateForm } from "@/components/admin/admin-create-form";
 import { ToggleActiveButton } from "@/components/admin/toggle-active-button";
 
 export const metadata: Metadata = {
@@ -38,7 +39,10 @@ export default async function AdminLendersPage() {
           <CardTitle>New Lender</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createLenderAction} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <AdminCreateForm
+            action={createLenderAction}
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          >
             <div className="space-y-1.5">
               <Label htmlFor="name">Name</Label>
               <Input id="name" name="name" required />
@@ -78,7 +82,7 @@ export default async function AdminLendersPage() {
             <div className="sm:col-span-2 lg:col-span-3">
               <Button type="submit">Create Lender</Button>
             </div>
-          </form>
+          </AdminCreateForm>
         </CardContent>
       </Card>
 

@@ -36,12 +36,17 @@ src/
                         route groups don't add a URL segment, so both
                         route groups share one flat URL space.
       profile/, sessions/    Phase 4.
-    admin/            Executive dashboard — a plain folder, not a `(admin)`
-                       route group, since `/admin/*` genuinely needs its
-                       own URL segment (Phase 8). layout.tsx redirects
-                       non-admins away; dashboard/page.tsx renders KPIs,
-                       the lead funnel, an activity heatmap, alerts, and
-                       system health.
+    admin/            Executive dashboard + admin panel — a plain folder,
+                       not a `(admin)` route group, since `/admin/*`
+                       genuinely needs its own URL segment (Phase 8).
+                       layout.tsx redirects non-admins away.
+      dashboard/       KPIs, lead funnel, activity heatmap, alerts,
+                        system health (Phase 8).
+      users/, roles/, roles/[id]/, lenders/, loan-products/,
+      notification-templates/, cms/blog-posts/, settings/,
+      audit-logs/      Phase 9's Admin Panel — one page per subsystem;
+                        see components/admin/ below for the shared
+                        pieces every list page uses.
     status/          Relocated Phase 1 system-status page (noindex,
                        disallowed in robots.ts — discloses internal service
                        info, not meant for public visitors).
@@ -67,12 +72,24 @@ src/
                        system-health-panel.tsx, dashboard-auto-refresh.tsx
                        (client component; polls via router.refresh() —
                        see docs/phase-8-architecture.md's "Real-Time
-                       Monitoring" note) (Phase 8).
+                       Monitoring" note) (Phase 8). admin-create-form.tsx
+                       (every "New X" form's shared wrapper — see
+                       docs/phase-9-architecture.md's "Bugs found" for why
+                       a bare `<form action={serverAction}>` doesn't
+                       typecheck), toggle-active-button.tsx,
+                       user-role-form.tsx, delete-role-button.tsx,
+                       revoke-permission-button.tsx, blog-post-actions.tsx,
+                       setting-row.tsx (Phase 9).
     analytics/        google-analytics.tsx (GA4, no-op without an env var)
     site-header.tsx, site-footer.tsx
-  content/           Static typed content: loan-products.ts, blog-posts.ts,
-                       faqs.ts, job-openings.ts, nav-links.ts. Phase 9's CMS
-                       will eventually replace this as the data source.
+  content/           Static typed content: loan-products.ts, faqs.ts,
+                       job-openings.ts, nav-links.ts. blog-posts.ts was
+                       deleted in Phase 9 — the /blog pages now read from
+                       the database via lib/cms/session.ts; loan-products.ts
+                       stays static on purpose (see
+                       docs/phase-9-architecture.md's "Honest
+                       simplifications" — the backend catalog moved to a
+                       real table, the public marketing pages didn't).
   hooks/             TanStack Query hooks (use-platform-health.ts)
   lib/
     api-client.ts     Typed fetch wrapper
@@ -87,12 +104,22 @@ src/
                         password reset/logout/session revoke) (Phase 4).
     loans/             Same session.ts/actions.ts/schemas.ts split as
                         lib/auth/, for loan applications (Phase 7).
-    admin/             session.ts only — five read-only fetches
-                        (KPIs/funnel/heatmap/alerts/system-health), no
-                        actions.ts, since the dashboard is read-only
-                        (Phase 8).
+    admin/             session.ts (Phase 8's five dashboard reads, plus
+                        ~12 more for Phase 9's subsystems — both go
+                        through two generic helpers, fetchAdminList/
+                        fetchAdminOne, instead of repeating the same
+                        try/catch), actions.ts (Phase 9 only — ~20 Server
+                        Actions, one per mutation across all 6
+                        subsystems; dashboard stayed read-only in Phase 8
+                        so it never needed one).
+    cms/               session.ts — public, unauthenticated reads
+                        (listPublishedBlogPosts, getPublishedBlogPost),
+                        a different trust boundary from lib/admin/
+                        session.ts. Backs the marketing site's /blog
+                        pages (Phase 9).
     format.ts, structured-data.ts, analytics.ts
-  types/              auth.ts, loans.ts, dashboard.ts — API response shapes.
+  types/              auth.ts, loans.ts, dashboard.ts, admin.ts — API
+                       response shapes.
   tests/              Vitest setup (jest-dom matchers)
 ```
 
@@ -125,13 +152,16 @@ until it's a real GA4 ID.
 
 ## What's here vs. what's coming
 
-Phases 1–8 ship the app shell, the public marketing site (home, about,
-contact, careers, blog, FAQs, legal pages, loan products, EMI/eligibility
-calculators, SEO, analytics), a signed-in customer portal (auth, Phase 4;
-loan applications — browse products, apply, track status through the
-full origination pipeline, submit checklist documents, Phase 7), and an
-admin-only executive dashboard (`/admin/dashboard`: business KPIs, lead
-funnel, activity heatmap, alerts, system health, Phase 8). Employee and
-partner portals (Phases 10–11) land as their own top-level folders in
-this same workspace when their phases come up, the same way `admin/`
-did.
+Phases 1–9 ship the app shell, the public marketing site (home, about,
+contact, careers, blog — database-backed via a public CMS API since
+Phase 9, FAQs, legal pages, loan products, EMI/eligibility calculators,
+SEO, analytics), a signed-in customer portal (auth, Phase 4; loan
+applications — browse products, apply, track status through the full
+origination pipeline, submit checklist documents, Phase 7), and an
+admin-only area (`/admin/*`, role-gated): an executive dashboard
+(business KPIs, lead funnel, activity heatmap, alerts, system health,
+Phase 8) plus a full admin panel (user/role/permission management,
+lender and loan product catalogs, notification templates, CMS, settings/
+feature flags, audit logs, Phase 9). Employee and partner portals
+(Phases 10–11) land as their own top-level folders in this same
+workspace when their phases come up, the same way `admin/` did.

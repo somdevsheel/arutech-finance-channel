@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { blogPosts, getBlogPostBySlug } from "@/content/blog-posts";
+import { getPublishedBlogPost, listPublishedBlogPosts } from "@/lib/cms/session";
 import { formatDate } from "@/lib/format";
 import { articleJsonLd } from "@/lib/structured-data";
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const posts = await listPublishedBlogPosts();
+  return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({
@@ -14,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await getPublishedBlogPost(slug);
   if (!post) return {};
 
   return {
@@ -24,7 +27,7 @@ export async function generateMetadata({
       title: post.title,
       description: post.excerpt,
       type: "article",
-      publishedTime: post.publishedAt,
+      publishedTime: post.published_at ?? undefined,
     },
   };
 }
@@ -35,7 +38,7 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await getPublishedBlogPost(slug);
   if (!post) notFound();
 
   return (
@@ -47,7 +50,7 @@ export default async function BlogPostPage({
             articleJsonLd({
               title: post.title,
               description: post.excerpt,
-              datePublished: post.publishedAt,
+              datePublished: post.published_at ?? "",
               author: post.author,
               slug: post.slug,
             }),
@@ -57,8 +60,8 @@ export default async function BlogPostPage({
 
       <article className="mx-auto max-w-2xl px-4 py-20 sm:px-6 lg:px-8">
         <p className="text-sm text-muted-foreground">
-          {formatDate(post.publishedAt)} &middot; {post.readingMinutes} min read
-          &middot; {post.author}
+          {post.published_at && formatDate(post.published_at)} &middot; {post.reading_minutes} min
+          read &middot; {post.author}
         </p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
           {post.title}

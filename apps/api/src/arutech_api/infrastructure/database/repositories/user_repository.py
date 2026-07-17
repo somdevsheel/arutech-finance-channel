@@ -86,3 +86,38 @@ class SqlAlchemyUserRepository(UserRepository):
         await self._session.flush()
         await self._session.refresh(model)
         return _to_entity(model)
+
+    async def list_users(
+        self,
+        *,
+        role: UserRole | None = None,
+        is_active: bool | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[UserEntity]:
+        query = select(User)
+        if role is not None:
+            query = query.where(User.role == role)
+        if is_active is not None:
+            query = query.where(User.is_active.is_(is_active))
+        query = query.order_by(User.created_at.desc()).limit(limit).offset(offset)
+        result = await self._session.execute(query)
+        return [_to_entity(model) for model in result.scalars().all()]
+
+    async def set_active(self, user_id: uuid.UUID, *, is_active: bool) -> UserEntity:
+        model = await self._session.get(User, user_id)
+        if model is None:
+            raise NotFoundError(f"User {user_id} not found")
+        model.is_active = is_active
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _to_entity(model)
+
+    async def set_role(self, user_id: uuid.UUID, role: UserRole) -> UserEntity:
+        model = await self._session.get(User, user_id)
+        if model is None:
+            raise NotFoundError(f"User {user_id} not found")
+        model.role = role
+        await self._session.flush()
+        await self._session.refresh(model)
+        return _to_entity(model)

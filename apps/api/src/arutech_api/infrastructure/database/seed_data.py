@@ -16,7 +16,11 @@ app actually ships with, not a parallel hand-maintained copy.
 # `dashboard.read` is deliberately admin-only (not granted to `employee`
 # below) — the executive dashboard is exec-level aggregate data across the
 # whole business, a different audience than the per-record `*.read`
-# permissions employees already have.
+# permissions employees already have. Every Phase 9 permission
+# (lenders/loan_products/notification_templates/cms/settings) is
+# admin-only for the same reason: project.md frames all of Phase 9 as
+# "Admin Panel" — back-office catalog/config management, not the
+# day-to-day operational work `leads.*`/`customers.*`/`loans.*` cover.
 PERMISSIONS: list[tuple[str, str]] = [
     ("users.read", "View user profiles"),
     ("users.manage", "Create, update, and deactivate user accounts"),
@@ -32,6 +36,16 @@ PERMISSIONS: list[tuple[str, str]] = [
         "dashboard.read",
         "View the executive dashboard: KPIs, funnel, heatmap, alerts, system health",
     ),
+    ("lenders.read", "View the bank/NBFC lender catalog"),
+    ("lenders.manage", "Create, update, and (de)activate lenders"),
+    ("loan_products.read", "View the loan product catalog"),
+    ("loan_products.manage", "Create, update, and (de)activate loan products"),
+    ("notification_templates.read", "View notification templates"),
+    ("notification_templates.manage", "Create, update, and (de)activate notification templates"),
+    ("cms.read", "View CMS content, including unpublished drafts"),
+    ("cms.manage", "Create, update, publish, and unpublish CMS content"),
+    ("settings.read", "View system settings"),
+    ("settings.manage", "Update system settings"),
 ]
 
 # Role -> permission codes. Matches the existing `UserRole` enum

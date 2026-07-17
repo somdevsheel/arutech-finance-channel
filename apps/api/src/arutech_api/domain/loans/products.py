@@ -1,14 +1,19 @@
-"""Loan product bounds — duplicated from `apps/web/src/content/loan-
-products.ts` (slug, interest rate range, tenure range, amount range,
-required documents) on purpose, not joined to it: there's no shared
-package between the two apps, and this is the minimum data the backend
-needs to validate an application (requested amount/tenure in range,
-interest rate in range) and seed its document checklist. The full catalog
-(marketing copy, feature lists, eligibility highlights) stays
-frontend-only static content — Phase 9's "Loan Product Management" is
-what makes this the single, database-backed source of truth for both
-sides; until then, changing a product's rates/limits/documents means
-editing both files, same as any duplicated-by-necessity constant.
+"""Seed data only — as of Phase 9, `loan_products` is a real, admin-
+manageable database table (see `domain/loans/product_entities.py`,
+`LoanProductRepository`); `LoanApplicationService` reads from there now,
+not from this module. What's left here is the *initial* data: migration
+`a9e3b9b15ff5` freezes a literal copy of this at write time (migrations never
+import a live/growing module — see `c422da52af08`'s comment), and
+`tests/conftest.py` imports `LOAN_PRODUCTS` directly to seed the same
+rows into the test database, mirroring how `_seed_rbac` imports
+`seed_data.PERMISSIONS`. Interest rate bounds live here too — Phase 9's
+"Interest Rate Management" is just fields on this entity, not a separate
+mechanism.
+
+Still duplicated with `apps/web/src/content/loan-products.ts` on the
+marketing-copy side (tagline, features, eligibility highlights) — the
+public product pages stay static content rather than a live fetch; see
+docs/phase-9-architecture.md's "Honest simplifications" for why.
 """
 
 from dataclasses import dataclass
@@ -149,7 +154,3 @@ LOAN_PRODUCTS: dict[str, LoanProductLimits] = {
         ),
     ]
 }
-
-
-def get_product(slug: str) -> LoanProductLimits | None:
-    return LOAN_PRODUCTS.get(slug)

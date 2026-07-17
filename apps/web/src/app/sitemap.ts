@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { blogPosts } from "@/content/blog-posts";
+import { listPublishedBlogPosts } from "@/lib/cms/session";
 import { clientEnv } from "@/lib/env";
 import { loanProducts } from "@/content/loan-products";
 
@@ -20,7 +20,7 @@ const staticRoutes = [
   "/tools/eligibility-calculator",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((path) => ({
     url: `${siteUrl}${path}`,
     lastModified: new Date(),
@@ -31,9 +31,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
   }));
 
+  const blogPosts = await listPublishedBlogPosts();
   const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({
     url: `${siteUrl}/blog/${post.slug}`,
-    lastModified: new Date(post.publishedAt),
+    lastModified: post.published_at ? new Date(post.published_at) : new Date(),
   }));
 
   return [...staticEntries, ...loanEntries, ...blogEntries];

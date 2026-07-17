@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from arutech_api.core.exceptions import ConflictError, NotFoundError
-from arutech_api.domain.loans import products
 from arutech_api.domain.loans.calculations import assess_credit, assess_eligibility, calculate_emi
 from arutech_api.domain.loans.document_repository import LoanDocumentRepository
 from arutech_api.domain.loans.entities import (
@@ -18,6 +17,7 @@ from arutech_api.domain.loans.entities import (
     VerificationStatus,
     is_transition_allowed,
 )
+from arutech_api.domain.loans.product_repository import LoanProductRepository
 from arutech_api.domain.loans.repository import LoanApplicationRepository
 from arutech_api.domain.users.entities import UserRole
 from arutech_api.domain.users.repository import UserRepository
@@ -37,11 +37,13 @@ class LoanApplicationService:
         application_repo: LoanApplicationRepository,
         document_repo: LoanDocumentRepository,
         user_repo: UserRepository,
+        product_repo: LoanProductRepository,
         audit_service: AuditService,
     ):
         self._application_repo = application_repo
         self._document_repo = document_repo
         self._user_repo = user_repo
+        self._product_repo = product_repo
         self._audit_service = audit_service
 
     # --- creation & customer self-service -------------------------------
@@ -58,7 +60,7 @@ class LoanApplicationService:
         interest_rate: Decimal | None = None,
         lead_id: uuid.UUID | None = None,
     ) -> LoanApplicationEntity:
-        product = products.get_product(loan_product_slug)
+        product = await self._product_repo.get_by_slug(loan_product_slug)
         if product is None:
             raise NotFoundError(f"Unknown loan product '{loan_product_slug}'")
 
@@ -178,7 +180,7 @@ class LoanApplicationService:
         return saved
 
     async def _seed_document_checklist(self, application: LoanApplicationEntity) -> None:
-        product = products.get_product(application.loan_product_slug)
+        product = await self._product_repo.get_by_slug(application.loan_product_slug)
         if product is None:
             return
         for document_type in product.documents_required:

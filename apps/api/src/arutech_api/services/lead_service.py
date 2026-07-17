@@ -14,6 +14,8 @@ from arutech_api.domain.leads.entities import (
 )
 from arutech_api.domain.leads.repository import LeadRepository
 from arutech_api.domain.leads.scoring import MAX_SCORE, score_lead
+from arutech_api.domain.settings.entities import parse_bool_setting
+from arutech_api.domain.settings.repository import SystemSettingRepository
 from arutech_api.domain.users.entities import UserRole
 from arutech_api.domain.users.repository import UserRepository
 from arutech_api.services.audit_service import AuditService
@@ -22,6 +24,13 @@ from arutech_api.services.audit_service import AuditService
 # signal (they came back), just not a fresh pipeline entry — see
 # create_from_contact_submission.
 _DUPLICATE_RESUBMISSION_SCORE_BONUS = 10
+
+# Phase 9's "Settings"/"Workflow Management" — see
+# domain/settings/entities.py's SystemSettingEntity docstring. Seeded
+# `true` by the Phase 9 migration; defaults to enabled (preserving
+# Phase 5's original behavior) if somehow unset, rather than silently
+# stopping assignment.
+_AUTO_ASSIGNMENT_SETTING_KEY = "leads.auto_assignment_enabled"
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,18 +47,27 @@ class LeadService:
         user_repo: UserRepository,
         audit_service: AuditService,
         audit_repo: AuditLogRepository,
+        settings_repo: SystemSettingRepository,
     ):
         self._lead_repo = lead_repo
         self._user_repo = user_repo
         self._audit_service = audit_service
         self._audit_repo = audit_repo
+        self._settings_repo = settings_repo
 
     async def _auto_assign(self, lead: LeadEntity) -> LeadEntity:
         """Least-loaded assignment: among active employees, whoever
         currently owns the fewest open (non-terminal) leads gets the new
         one. Falls back to leaving the lead unassigned if there are no
         active employees yet — a real, expected state early in the
-        platform's life, not an error."""
+        platform's life, not an error. Also backs off (leaving the lead
+        unassigned) if an admin has turned off
+        `leads.auto_assignment_enabled` via Phase 9's Settings — the one
+        real, wired consumer of that mechanism."""
+        setting = await self._settings_repo.get_by_key(_AUTO_ASSIGNMENT_SETTING_KEY)
+        if setting is not None and not parse_bool_setting(setting.value):
+            return lead
+
         employees = await self._user_repo.list_by_role(UserRole.EMPLOYEE, active_only=True)
         if not employees:
             return lead

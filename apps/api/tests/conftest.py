@@ -8,8 +8,12 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from arutech_api.core.config import settings
+from arutech_api.domain.loans.products import LOAN_PRODUCTS
+from arutech_api.domain.settings.entities import SettingValueType
 from arutech_api.infrastructure.database.base import Base
+from arutech_api.infrastructure.database.models.loan_products import LoanProduct
 from arutech_api.infrastructure.database.models.rbac import Permission, Role
+from arutech_api.infrastructure.database.models.settings import SystemSetting
 from arutech_api.infrastructure.database.seed_data import PERMISSIONS, ROLE_PERMISSIONS
 
 
@@ -78,6 +82,41 @@ async def _seed_rbac(session: AsyncSession) -> None:
     await session.commit()
 
 
+async def _seed_loan_products(session: AsyncSession) -> None:
+    """Mirrors the same 7 products the Phase 9 migration inserts into a
+    real database — see `domain/loans/products.py`'s module docstring for
+    why this imports it directly (a test fixture, not a migration)."""
+    session.add_all(
+        LoanProduct(
+            slug=p.slug,
+            name=p.name,
+            interest_rate_min=p.interest_rate_min,
+            interest_rate_max=p.interest_rate_max,
+            tenure_min_months=p.tenure_min_months,
+            tenure_max_months=p.tenure_max_months,
+            amount_min=p.amount_min,
+            amount_max=p.amount_max,
+            documents_required=list(p.documents_required),
+        )
+        for p in LOAN_PRODUCTS.values()
+    )
+    await session.commit()
+
+
+async def _seed_settings(session: AsyncSession) -> None:
+    """Mirrors the Phase 9 migration's one starter setting — see
+    `LeadService._auto_assign`, the real wired consumer."""
+    session.add(
+        SystemSetting(
+            key="leads.auto_assignment_enabled",
+            value="true",
+            value_type=SettingValueType.BOOLEAN,
+            description="Whether new leads are auto-assigned to the least-loaded employee.",
+        )
+    )
+    await session.commit()
+
+
 @pytest_asyncio.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
     """An isolated in-memory SQLite database per test, so repository/service
@@ -89,6 +128,8 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
     session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
     async with session_factory() as session:
         await _seed_rbac(session)
+        await _seed_loan_products(session)
+        await _seed_settings(session)
         yield session
 
     await engine.dispose()

@@ -6,8 +6,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { blogPosts } from "@/content/blog-posts";
+import { listPublishedBlogPosts } from "@/lib/cms/session";
 import { formatDate } from "@/lib/format";
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -15,7 +17,9 @@ export const metadata: Metadata = {
     "Practical guidance on credit scores, loan eligibility, and borrowing smart from the Arutech editorial team.",
 };
 
-export default function BlogIndexPage() {
+export default async function BlogIndexPage() {
+  const blogPosts = await listPublishedBlogPosts();
+
   return (
     <section className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="text-center">
@@ -31,7 +35,8 @@ export default function BlogIndexPage() {
             <Card className="h-full transition-colors hover:border-primary/40">
               <CardHeader>
                 <p className="text-xs text-muted-foreground">
-                  {formatDate(post.publishedAt)} &middot; {post.readingMinutes} min read
+                  {post.published_at && formatDate(post.published_at)} &middot;{" "}
+                  {post.reading_minutes} min read
                 </p>
                 <CardTitle className="mt-1 text-lg leading-snug">
                   {post.title}

@@ -12,18 +12,26 @@ from arutech_api.core.security import TokenError, TokenType, decode_token
 from arutech_api.domain.audit.repository import AuditLogRepository
 from arutech_api.domain.auth.ports import OtpDeliveryPort
 from arutech_api.domain.auth.repository import OtpRepository, RefreshTokenRepository
+from arutech_api.domain.cms.repository import BlogPostRepository
 from arutech_api.domain.contact.repository import ContactSubmissionRepository
 from arutech_api.domain.crm.interaction_repository import InteractionRepository
 from arutech_api.domain.crm.repository import CustomerRepository
 from arutech_api.domain.leads.repository import LeadRepository
 from arutech_api.domain.leads.task_repository import LeadTaskRepository
+from arutech_api.domain.lenders.repository import LenderRepository
 from arutech_api.domain.loans.document_repository import LoanDocumentRepository
+from arutech_api.domain.loans.product_repository import LoanProductRepository
 from arutech_api.domain.loans.repository import LoanApplicationRepository
+from arutech_api.domain.notifications.repository import NotificationTemplateRepository
 from arutech_api.domain.rbac.repository import RbacRepository
+from arutech_api.domain.settings.repository import SystemSettingRepository
 from arutech_api.domain.users.entities import UserEntity
 from arutech_api.domain.users.repository import UserRepository
 from arutech_api.infrastructure.database.repositories.audit_log_repository import (
     SqlAlchemyAuditLogRepository,
+)
+from arutech_api.infrastructure.database.repositories.blog_post_repository import (
+    SqlAlchemyBlogPostRepository,
 )
 from arutech_api.infrastructure.database.repositories.contact_repository import (
     SqlAlchemyContactSubmissionRepository,
@@ -40,11 +48,20 @@ from arutech_api.infrastructure.database.repositories.lead_repository import (
 from arutech_api.infrastructure.database.repositories.lead_task_repository import (
     SqlAlchemyLeadTaskRepository,
 )
+from arutech_api.infrastructure.database.repositories.lender_repository import (
+    SqlAlchemyLenderRepository,
+)
 from arutech_api.infrastructure.database.repositories.loan_application_repository import (
     SqlAlchemyLoanApplicationRepository,
 )
 from arutech_api.infrastructure.database.repositories.loan_document_repository import (
     SqlAlchemyLoanDocumentRepository,
+)
+from arutech_api.infrastructure.database.repositories.loan_product_repository import (
+    SqlAlchemyLoanProductRepository,
+)
+from arutech_api.infrastructure.database.repositories.notification_template_repository import (
+    SqlAlchemyNotificationTemplateRepository,
 )
 from arutech_api.infrastructure.database.repositories.otp_repository import (
     SqlAlchemyOtpRepository,
@@ -55,20 +72,30 @@ from arutech_api.infrastructure.database.repositories.rbac_repository import (
 from arutech_api.infrastructure.database.repositories.refresh_token_repository import (
     SqlAlchemyRefreshTokenRepository,
 )
+from arutech_api.infrastructure.database.repositories.system_setting_repository import (
+    SqlAlchemySystemSettingRepository,
+)
 from arutech_api.infrastructure.database.repositories.user_repository import (
     SqlAlchemyUserRepository,
 )
 from arutech_api.infrastructure.notifications.log_otp_delivery import LoggingOtpDeliveryChannel
 from arutech_api.services.audit_service import AuditService
 from arutech_api.services.auth_service import AuthService
+from arutech_api.services.blog_post_service import BlogPostService
 from arutech_api.services.contact_service import ContactService
 from arutech_api.services.customer_service import CustomerService
 from arutech_api.services.dashboard_service import DashboardService
 from arutech_api.services.interaction_service import InteractionService
 from arutech_api.services.lead_service import LeadService
 from arutech_api.services.lead_task_service import LeadTaskService
+from arutech_api.services.lender_service import LenderService
 from arutech_api.services.loan_application_service import LoanApplicationService
 from arutech_api.services.loan_document_service import LoanDocumentService
+from arutech_api.services.loan_product_service import LoanProductService
+from arutech_api.services.notification_template_service import NotificationTemplateService
+from arutech_api.services.rbac_service import RbacService
+from arutech_api.services.settings_service import SettingsService
+from arutech_api.services.user_admin_service import UserAdminService
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -97,6 +124,10 @@ def get_contact_repository(session: DbSession) -> ContactSubmissionRepository:
     return SqlAlchemyContactSubmissionRepository(session)
 
 
+def get_blog_post_repository(session: DbSession) -> BlogPostRepository:
+    return SqlAlchemyBlogPostRepository(session)
+
+
 def get_lead_repository(session: DbSession) -> LeadRepository:
     return SqlAlchemyLeadRepository(session)
 
@@ -121,6 +152,24 @@ def get_loan_document_repository(session: DbSession) -> LoanDocumentRepository:
     return SqlAlchemyLoanDocumentRepository(session)
 
 
+def get_lender_repository(session: DbSession) -> LenderRepository:
+    return SqlAlchemyLenderRepository(session)
+
+
+def get_loan_product_repository(session: DbSession) -> LoanProductRepository:
+    return SqlAlchemyLoanProductRepository(session)
+
+
+def get_notification_template_repository(
+    session: DbSession,
+) -> NotificationTemplateRepository:
+    return SqlAlchemyNotificationTemplateRepository(session)
+
+
+def get_system_setting_repository(session: DbSession) -> SystemSettingRepository:
+    return SqlAlchemySystemSettingRepository(session)
+
+
 _otp_delivery_channel = LoggingOtpDeliveryChannel()
 
 
@@ -139,8 +188,9 @@ def get_lead_service(
     user_repo: Annotated[UserRepository, Depends(get_user_repository)],
     audit_service: Annotated[AuditService, Depends(get_audit_service)],
     audit_repo: Annotated[AuditLogRepository, Depends(get_audit_log_repository)],
+    settings_repo: Annotated[SystemSettingRepository, Depends(get_system_setting_repository)],
 ) -> LeadService:
-    return LeadService(lead_repo, user_repo, audit_service, audit_repo)
+    return LeadService(lead_repo, user_repo, audit_service, audit_repo, settings_repo)
 
 
 def get_contact_service(
@@ -184,9 +234,19 @@ def get_loan_application_service(
     ],
     document_repo: Annotated[LoanDocumentRepository, Depends(get_loan_document_repository)],
     user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+    product_repo: Annotated[LoanProductRepository, Depends(get_loan_product_repository)],
     audit_service: Annotated[AuditService, Depends(get_audit_service)],
 ) -> LoanApplicationService:
-    return LoanApplicationService(application_repo, document_repo, user_repo, audit_service)
+    return LoanApplicationService(
+        application_repo, document_repo, user_repo, product_repo, audit_service
+    )
+
+
+def get_loan_product_service(
+    product_repo: Annotated[LoanProductRepository, Depends(get_loan_product_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> LoanProductService:
+    return LoanProductService(product_repo, audit_service)
 
 
 def get_loan_document_service(
@@ -206,6 +266,52 @@ def get_dashboard_service(
     user_repo: Annotated[UserRepository, Depends(get_user_repository)],
 ) -> DashboardService:
     return DashboardService(lead_repo, customer_repo, loan_repo, user_repo)
+
+
+def get_lender_service(
+    lender_repo: Annotated[LenderRepository, Depends(get_lender_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> LenderService:
+    return LenderService(lender_repo, audit_service)
+
+
+def get_blog_post_service(
+    post_repo: Annotated[BlogPostRepository, Depends(get_blog_post_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> BlogPostService:
+    return BlogPostService(post_repo, audit_service)
+
+
+def get_notification_template_service(
+    template_repo: Annotated[
+        NotificationTemplateRepository, Depends(get_notification_template_repository)
+    ],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> NotificationTemplateService:
+    return NotificationTemplateService(template_repo, audit_service)
+
+
+def get_settings_service(
+    settings_repo: Annotated[SystemSettingRepository, Depends(get_system_setting_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> SettingsService:
+    return SettingsService(settings_repo, audit_service)
+
+
+def get_user_admin_service(
+    user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+    rbac_repo: Annotated[RbacRepository, Depends(get_rbac_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> UserAdminService:
+    return UserAdminService(user_repo, rbac_repo, audit_service)
+
+
+def get_rbac_service(
+    rbac_repo: Annotated[RbacRepository, Depends(get_rbac_repository)],
+    user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+    audit_service: Annotated[AuditService, Depends(get_audit_service)],
+) -> RbacService:
+    return RbacService(rbac_repo, user_repo, audit_service)
 
 
 def get_auth_service(

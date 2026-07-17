@@ -38,3 +38,35 @@ class UserRepository(ABC):
         KPI, which only needs a number — loading every employee row into
         memory just to call `len()` would be wasteful."""
         ...
+
+    @abstractmethod
+    async def list_users(
+        self,
+        *,
+        role: UserRole | None = None,
+        is_active: bool | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[UserEntity]:
+        """Phase 9's User Management listing — unlike `list_by_role`, both
+        filters are optional (an admin browsing all users doesn't know a
+        role in advance) and it's paginated, since this is the one place
+        every user in the system can show up in a single list."""
+        ...
+
+    @abstractmethod
+    async def set_active(self, user_id: uuid.UUID, *, is_active: bool) -> UserEntity:
+        """Narrow setter (Lead/CustomerProfile's convention, not
+        LoanApplication's full-entity `update()`) for Phase 9's
+        activate/deactivate. A deactivated user can't log in (see
+        `AuthService`) but keeps every historical record — leads they
+        worked, applications they own — intact."""
+        ...
+
+    @abstractmethod
+    async def set_role(self, user_id: uuid.UUID, role: UserRole) -> UserEntity:
+        """Narrow setter for the coarse `UserRole` (the portal selector —
+        see `UserEntity.role`'s docstring). The service layer keeps this
+        in sync with the separate RBAC `roles`/`user_roles` tables; the
+        repository only ever touches the one column."""
+        ...

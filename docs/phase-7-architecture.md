@@ -146,12 +146,54 @@ the phases that would actually drive it.
 Unlike Phase 5/6, this phase touches `apps/web`: Phase 4's customer
 portal dashboard had an explicit placeholder — "You don't have any
 applications yet... coming in a later phase." This phase replaces it with
-a real flow: browsing loan products, applying, submitting, tracking
-status, and viewing/submitting the document checklist, all under the
-existing customer-portal BFF (Server Actions, httpOnly session cookies)
-Phase 4 established. See the "What changed in apps/web" section of this
-doc's companion `apps/web` notes for the specific routes/components
-added.
+a real flow, all under the existing customer-portal BFF (Server Actions,
+httpOnly session cookies) Phase 4 established — no new auth pattern, just
+new Server Actions and Server Component reads following it:
+
+```
+lib/loans/
+  session.ts        Read-only Server Component fetches (getOwnLoanApplications,
+                     getOwnLoanApplication, getOwnLoanDocuments) — mirrors
+                     lib/auth/session.ts exactly, including why it's read-only
+                     (proxy.ts already guarantees a fresh access token).
+  actions.ts         applyForLoanAction (create + submit collapsed into one
+                     action — see its docstring), withdrawApplicationAction,
+                     submitDocumentAction.
+  schemas.ts          Loose zod bounds (just "positive") — the real per-
+                       product min/max lives only in the backend's
+                       products.py and is enforced there; duplicating it a
+                       third time (frontend content + backend catalog is
+                       already the accepted duplication) wasn't worth it.
+app/(portal)/applications/          List, apply, and [id] detail pages —
+                                     see "Bugs found" for why this isn't
+                                     named app/(portal)/loans/.
+components/portal/    LoanApplicationCard, LoanStatusBadge, LoanApplyForm,
+                       DocumentChecklist, WithdrawApplicationButton.
+```
+
+The marketing loan product detail page (`(marketing)/loans/[slug]`) got
+an "Apply Now" button linking to `/applications/apply?product={slug}`;
+`proxy.ts`'s login redirect was extended to preserve the full path +
+query string (previously pathname-only), so a logged-out visitor clicking
+"Apply Now" for a specific product still lands on that same pre-filled
+form after signing in instead of a generic blank one.
+
+### Bugs found integrating the frontend
+
+**`app/(portal)/loans/` collided with the already-existing
+`app/(marketing)/loans/`.** Route groups (the parenthesized
+`(portal)`/`(marketing)` folders) are purely organizational — they don't
+add a URL segment — so `(portal)/loans/[id]/page.tsx` and
+`(marketing)/loans/[slug]/page.tsx` both resolved to the identical
+`/loans/[*]` URL pattern, and `(portal)/loans/page.tsx` collided with the
+marketing product listing at `/loans` the same way. Next.js's own build
+step catches this ("Ambiguous app routes detected") — `next build`, not
+`tsc` or `eslint`, which both passed cleanly beforehand. Fixed by renaming
+the customer-facing route to `/applications`, which also reads more
+clearly for "the loans *I've* applied for" versus `/loans`, the public
+product catalog. Caught by actually running a production build before
+calling the frontend work done, not just typecheck/lint/tests — the same
+"verify by running it" discipline this project applies to migrations.
 
 ## Database schema (migration `5bf4ba328030`)
 

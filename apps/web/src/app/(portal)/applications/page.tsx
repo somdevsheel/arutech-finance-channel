@@ -27,7 +27,7 @@ export default async function LoansPage() {
             Track every application you&apos;ve submitted.
           </p>
         </div>
-        <Button render={<Link href="/loans/apply" />}>
+        <Button render={<Link href="/applications/apply" />}>
           <Plus className="size-4" /> Apply for a loan
         </Button>
       </div>
@@ -37,7 +37,7 @@ export default async function LoansPage() {
           <p className="text-sm text-muted-foreground">
             You haven&apos;t applied for a loan yet.
           </p>
-          <Button className="mt-4" render={<Link href="/loans/apply" />}>
+          <Button className="mt-4" render={<Link href="/applications/apply" />}>
             Apply for a loan
           </Button>
         </div>

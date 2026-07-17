@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from arutech_api.core.exceptions import NotFoundError
@@ -63,6 +63,12 @@ class SqlAlchemyUserRepository(UserRepository):
             query = query.where(User.is_active.is_(True))
         result = await self._session.execute(query.order_by(User.created_at))
         return [_to_entity(model) for model in result.scalars().all()]
+
+    async def count_by_role(self, role: UserRole, *, active_only: bool = True) -> int:
+        query = select(func.count(User.id)).where(User.role == role)
+        if active_only:
+            query = query.where(User.is_active.is_(True))
+        return (await self._session.execute(query)).scalar_one()
 
     async def update(self, user: UserEntity) -> UserEntity:
         model = await self._session.get(User, user.id)

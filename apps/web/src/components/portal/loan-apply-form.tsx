@@ -65,7 +65,7 @@ export function LoanApplyForm({ initialProductSlug }: { initialProductSlug?: str
         ? "Application submitted — you look eligible based on what you shared."
         : "Application submitted — our team will follow up on eligibility.",
     );
-    router.push(`/loans/${result.data.application.id}`);
+    router.push(`/applications/${result.data.application.id}`);
   }
 
   return (

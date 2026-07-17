@@ -8,7 +8,11 @@ import {
 } from "@/lib/auth/constants";
 import { refreshTokens } from "@/lib/auth/refresh";
 
-const PORTAL_PREFIXES = ["/dashboard", "/profile", "/sessions"];
+// /applications was added in Phase 7 but missed here — a customer whose
+// access token expired while on that route got silently logged out
+// instead of silently refreshed, unlike every other portal route. Found
+// while wiring up Phase 8's /admin/* area and fixed alongside it.
+const PORTAL_PREFIXES = ["/dashboard", "/profile", "/sessions", "/applications", "/admin"];
 
 function matchesPrefix(pathname: string, prefixes: string[]): boolean {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -17,10 +21,10 @@ function matchesPrefix(pathname: string, prefixes: string[]): boolean {
 function redirectToLogin(request: NextRequest): NextResponse {
   const url = new URL("/login", request.url);
   // pathname + search, not just pathname — e.g. a logged-out visitor
-  // hitting /loans/apply?product=gold-loan from the marketing site
-  // should land back on that same pre-filled apply page after signing
-  // in, not a bare /loans/apply that silently drops which product they
-  // picked.
+  // hitting /applications/apply?product=gold-loan from the marketing
+  // site should land back on that same pre-filled apply page after
+  // signing in, not a bare /applications/apply that silently drops
+  // which product they picked.
   url.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
   return NextResponse.redirect(url);
 }
@@ -86,5 +90,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/sessions/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/profile/:path*",
+    "/sessions/:path*",
+    "/applications/:path*",
+    "/admin/:path*",
+  ],
 };

@@ -20,17 +20,54 @@ Label/Input/Textarea instead.
 src/
   app/
     (marketing)/     Public site route group — its own header/footer layout.
-                       Maps to / (route groups don't affect the URL).
+                       Maps to / (route groups don't affect the URL). Owns
+                       /loans and /loans/[slug] (the public product catalog)
+                       — see the (portal)/applications/ note below for why
+                       the customer-facing loan *applications* area is named
+                       differently.
+    (auth)/           login, register, forgot-password — public, redirect
+                       away if already authenticated (Phase 4).
+    (portal)/         Signed-in customer portal — auth-gated by proxy.ts.
+      dashboard/       Overview: loan application count, profile, sessions.
+      applications/    List, apply, and per-application detail/status/
+                        document-checklist pages (Phase 7). Named
+                        `applications`, not `loans`, specifically to avoid
+                        colliding with (marketing)'s `/loans` — Next.js
+                        route groups don't add a URL segment, so both
+                        route groups share one flat URL space.
+      profile/, sessions/    Phase 4.
+    admin/            Executive dashboard — a plain folder, not a `(admin)`
+                       route group, since `/admin/*` genuinely needs its
+                       own URL segment (Phase 8). layout.tsx redirects
+                       non-admins away; dashboard/page.tsx renders KPIs,
+                       the lead funnel, an activity heatmap, alerts, and
+                       system health.
     status/          Relocated Phase 1 system-status page (noindex,
                        disallowed in robots.ts — discloses internal service
                        info, not meant for public visitors).
     sitemap.ts, robots.ts   Next.js file-convention SEO endpoints.
     providers.tsx    Wires TanStack Query + the toaster around the tree.
+  proxy.ts            Gates (portal)/* and admin/* routes and silently
+                       refreshes the access token — see
+                       docs/phase-4-architecture.md. Login redirects to
+                       /admin/dashboard or /dashboard based on role
+                       (login-form.tsx's resolveRedirect()), unless an
+                       explicit ?next= is present (Phase 8).
   components/
     ui/              shadcn/ui primitives (generated, don't hand-edit — re-run
                        `pnpm dlx shadcn@latest add <component>` instead)
     marketing/        Public-site building blocks: section headings,
                        calculator forms, contact form, legal-page renderer
+    auth/             Login/register/forgot-password forms (Phase 4).
+    portal/           Portal shell (header, sign-out) + loan application
+                       card/status-badge/apply-form/document-checklist
+                       (Phase 7).
+    admin/            admin-header.tsx, kpi-card.tsx, lead-funnel-chart.tsx,
+                       activity-heatmap.tsx, alerts-panel.tsx,
+                       system-health-panel.tsx, dashboard-auto-refresh.tsx
+                       (client component; polls via router.refresh() —
+                       see docs/phase-8-architecture.md's "Real-Time
+                       Monitoring" note) (Phase 8).
     analytics/        google-analytics.tsx (GA4, no-op without an env var)
     site-header.tsx, site-footer.tsx
   content/           Static typed content: loan-products.ts, blog-posts.ts,
@@ -40,8 +77,22 @@ src/
   lib/
     api-client.ts     Typed fetch wrapper
     env.ts            Zod-validated env vars
-    loan-calculations.ts   EMI + eligibility formulas (pure, unit-tested)
+    loan-calculations.ts   EMI + eligibility formulas (pure, unit-tested) —
+                            ported line-for-line into the backend's
+                            domain/loans/calculations.py in Phase 7 so both
+                            sides agree on the same numbers.
+    auth/              constants.ts (session cookie config), schemas.ts,
+                        session.ts (read-only Server Component fetches),
+                        actions.ts (Server Actions: login/register/OTP/
+                        password reset/logout/session revoke) (Phase 4).
+    loans/             Same session.ts/actions.ts/schemas.ts split as
+                        lib/auth/, for loan applications (Phase 7).
+    admin/             session.ts only — five read-only fetches
+                        (KPIs/funnel/heatmap/alerts/system-health), no
+                        actions.ts, since the dashboard is read-only
+                        (Phase 8).
     format.ts, structured-data.ts, analytics.ts
+  types/              auth.ts, loans.ts, dashboard.ts — API response shapes.
   tests/              Vitest setup (jest-dom matchers)
 ```
 
@@ -74,9 +125,13 @@ until it's a real GA4 ID.
 
 ## What's here vs. what's coming
 
-Phases 1–3 ship the app shell, the public marketing site (home, about,
+Phases 1–8 ship the app shell, the public marketing site (home, about,
 contact, careers, blog, FAQs, legal pages, loan products, EMI/eligibility
-calculators, SEO, analytics), and Phase 2's auth API (not yet wired to any
-UI here). Customer/admin/employee/partner portals (Phases 4, 8–11) land as
-route groups or sibling apps in this same workspace as their phases come
-up.
+calculators, SEO, analytics), a signed-in customer portal (auth, Phase 4;
+loan applications — browse products, apply, track status through the
+full origination pipeline, submit checklist documents, Phase 7), and an
+admin-only executive dashboard (`/admin/dashboard`: business KPIs, lead
+funnel, activity heatmap, alerts, system health, Phase 8). Employee and
+partner portals (Phases 10–11) land as their own top-level folders in
+this same workspace when their phases come up, the same way `admin/`
+did.

@@ -57,7 +57,7 @@ export default async function DashboardPage() {
               <Button
                 size="sm"
                 variant="outline"
-                render={<Link href={applications.length === 0 ? "/loans/apply" : "/loans"} />}
+                render={<Link href={applications.length === 0 ? "/applications/apply" : "/applications"} />}
               >
                 {applications.length === 0 ? "Apply now" : "View"}
               </Button>

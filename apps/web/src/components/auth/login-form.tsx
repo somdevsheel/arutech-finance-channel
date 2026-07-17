@@ -18,13 +18,25 @@ import {
   type OtpVerifyInput,
 } from "@/lib/auth/schemas";
 import { loginAction, requestOtpAction, verifyOtpAction } from "@/lib/auth/actions";
+import type { UserRole } from "@/types/auth";
 
 type Mode = "password" | "otp-request" | "otp-verify";
+
+// An explicit `?next=` (e.g. proxy.ts bouncing a logged-out visitor back
+// to the page they wanted) always wins. Absent that, land admins on the
+// admin dashboard and everyone else on the customer portal — Phase 8
+// added `/admin/*` as a role-gated area distinct from `/dashboard`, so a
+// blanket default would land an admin somewhere they'd immediately be
+// redirected away from by admin/layout.tsx.
+function resolveRedirect(explicitNext: string | null, role: UserRole): string {
+  if (explicitNext) return explicitNext;
+  return role === "admin" ? "/admin/dashboard" : "/dashboard";
+}
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/dashboard";
+  const explicitNext = searchParams.get("next");
   const [mode, setMode] = useState<Mode>("password");
   const [otpEmail, setOtpEmail] = useState("");
 
@@ -38,7 +50,7 @@ export function LoginForm() {
       toast.error(result.error);
       return;
     }
-    router.push(next);
+    router.push(resolveRedirect(explicitNext, result.data.user.role));
   }
 
   async function onOtpRequestSubmit(values: OtpRequestInput) {
@@ -59,7 +71,7 @@ export function LoginForm() {
       toast.error(result.error);
       return;
     }
-    router.push(next);
+    router.push(resolveRedirect(explicitNext, result.data.user.role));
   }
 
   if (mode === "otp-verify") {

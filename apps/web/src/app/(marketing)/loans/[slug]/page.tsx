@@ -48,7 +48,7 @@ export default async function LoanProductPage({
             {product.description}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button size="lg" render={<Link href={`/loans/apply?product=${product.slug}`} />}>
+            <Button size="lg" render={<Link href={`/applications/apply?product=${product.slug}`} />}>
               Apply Now <ArrowRight className="ml-1 size-4" />
             </Button>
             <Button

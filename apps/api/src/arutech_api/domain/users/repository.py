@@ -31,3 +31,10 @@ class UserRepository(ABC):
         auto-assignment; kept general (any role, optional active filter)
         since it's a reasonable thing later phases will also need."""
         ...
+
+    @abstractmethod
+    async def count_by_role(self, role: UserRole, *, active_only: bool = True) -> int:
+        """A `COUNT(*)` sibling of `list_by_role` for Phase 8's "Employees"
+        KPI, which only needs a number — loading every employee row into
+        memory just to call `len()` would be wasteful."""
+        ...

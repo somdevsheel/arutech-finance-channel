@@ -63,6 +63,7 @@ from arutech_api.services.audit_service import AuditService
 from arutech_api.services.auth_service import AuthService
 from arutech_api.services.contact_service import ContactService
 from arutech_api.services.customer_service import CustomerService
+from arutech_api.services.dashboard_service import DashboardService
 from arutech_api.services.interaction_service import InteractionService
 from arutech_api.services.lead_service import LeadService
 from arutech_api.services.lead_task_service import LeadTaskService
@@ -196,6 +197,15 @@ def get_loan_document_service(
     audit_service: Annotated[AuditService, Depends(get_audit_service)],
 ) -> LoanDocumentService:
     return LoanDocumentService(document_repo, application_repo, audit_service)
+
+
+def get_dashboard_service(
+    lead_repo: Annotated[LeadRepository, Depends(get_lead_repository)],
+    customer_repo: Annotated[CustomerRepository, Depends(get_customer_repository)],
+    loan_repo: Annotated[LoanApplicationRepository, Depends(get_loan_application_repository)],
+    user_repo: Annotated[UserRepository, Depends(get_user_repository)],
+) -> DashboardService:
+    return DashboardService(lead_repo, customer_repo, loan_repo, user_repo)
 
 
 def get_auth_service(

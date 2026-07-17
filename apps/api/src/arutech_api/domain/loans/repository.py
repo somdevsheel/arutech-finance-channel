@@ -39,3 +39,11 @@ class LoanApplicationRepository(ABC):
 
     @abstractmethod
     async def get_analytics_summary(self) -> LoanAnalyticsSummary: ...
+
+    @abstractmethod
+    async def get_hourly_activity_counts(self) -> dict[tuple[int, int], int]:
+        """Application creation counts bucketed by (day_of_week, hour),
+        day_of_week 0=Sunday..6=Saturday — mirrors
+        `LeadRepository.get_hourly_activity_counts`, the other half of
+        Phase 8's activity heatmap."""
+        ...

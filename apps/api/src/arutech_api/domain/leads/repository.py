@@ -45,3 +45,13 @@ class LeadRepository(ABC):
 
     @abstractmethod
     async def get_analytics_summary(self) -> LeadAnalyticsSummary: ...
+
+    @abstractmethod
+    async def get_hourly_activity_counts(self) -> dict[tuple[int, int], int]:
+        """Lead creation counts bucketed by (day_of_week, hour), day_of_week
+        0=Sunday..6=Saturday (SQL EXTRACT(DOW) convention — the one
+        day-of-week field Postgres and SQLite's extract_map both support
+        with identical numbering, unlike ISODOW which SQLite has no
+        equivalent for) — the input to Phase 8's activity heatmap. Only
+        non-empty buckets are returned; the caller zero-fills the rest."""
+        ...

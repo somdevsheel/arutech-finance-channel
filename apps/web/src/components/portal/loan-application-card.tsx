@@ -9,7 +9,7 @@ export function LoanApplicationCard({ application }: { application: LoanApplicat
   const product = getLoanProductBySlug(application.loan_product_slug);
 
   return (
-    <Link href={`/loans/${application.id}`}>
+    <Link href={`/applications/${application.id}`}>
       <Card className="transition-colors hover:bg-muted/40">
         <CardHeader>
           <div className="flex items-center justify-between gap-2">

@@ -153,3 +153,15 @@ class SqlAlchemyLeadRepository(LeadRepository):
             average_score=round(float(average_score), 2) if average_score is not None else 0.0,
             conversion_rate=round(conversion_rate, 4),
         )
+
+    async def get_hourly_activity_counts(self) -> dict[tuple[int, int], int]:
+        # EXTRACT(DOW ...), not ISODOW: SQLite's extract_map (used by the
+        # test suite) has no ISODOW equivalent, and DOW/'%w' is the one
+        # day-of-week field both dialects support with an identical
+        # 0=Sunday..6=Saturday numbering — see the repository interface
+        # docstring.
+        day_of_week = func.extract("dow", Lead.created_at)
+        hour = func.extract("hour", Lead.created_at)
+        query = select(day_of_week, hour, func.count(Lead.id)).group_by(day_of_week, hour)
+        rows = (await self._session.execute(query)).all()
+        return {(int(day), int(hour)): count for day, hour, count in rows}

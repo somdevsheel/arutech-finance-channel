@@ -7,11 +7,16 @@ app actually ships with, not a parallel hand-maintained copy.
 
 # A small, honest starter permission set tied to what actually exists —
 # not speculative permissions for features later phases haven't built yet.
-# `leads.*` (Phase 5, migration 0701461178f7) and `customers.*` (Phase 6,
-# migration — see that migration's own module for the added-in-this-
-# migration constants; this list is the current full picture, not a
-# historical record — see c422da52af08's own comment for why migrations
-# never import this module directly).
+# `leads.*` (Phase 5, migration 0701461178f7), `customers.*` (Phase 6),
+# `loans.*` (Phase 7, migration 5bf4ba328030), and `dashboard.read` (Phase
+# 8) were each added by their own migration — see that migration's own
+# module for the added-in-this-migration constants; this list is the
+# current full picture, not a historical record — see c422da52af08's own
+# comment for why migrations never import this module directly.
+# `dashboard.read` is deliberately admin-only (not granted to `employee`
+# below) — the executive dashboard is exec-level aggregate data across the
+# whole business, a different audience than the per-record `*.read`
+# permissions employees already have.
 PERMISSIONS: list[tuple[str, str]] = [
     ("users.read", "View user profiles"),
     ("users.manage", "Create, update, and deactivate user accounts"),
@@ -23,6 +28,10 @@ PERMISSIONS: list[tuple[str, str]] = [
     ("customers.manage", "Update customer segment, tags, relationship manager, and interactions"),
     ("loans.read", "View loan applications, documents, and analytics"),
     ("loans.manage", "Review, approve, sanction, disburse, and close loan applications"),
+    (
+        "dashboard.read",
+        "View the executive dashboard: KPIs, funnel, heatmap, alerts, system health",
+    ),
 ]
 
 # Role -> permission codes. Matches the existing `UserRole` enum
